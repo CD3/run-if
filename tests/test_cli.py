@@ -5,7 +5,7 @@ import pathlib
 import pytest
 from typer.testing import CliRunner
 
-from run_if.cli import app
+from run_if_changed.cli import app
 
 
 @contextlib.contextmanager

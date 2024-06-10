@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "run-if"
+name = "run-if-changed"
 version = "0.1.0"
 description = ""
 authors = ["CD Clark III <clifton.clark@gmail.com>"]
@@ -18,4 +18,5 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-run-if = "run_if.cli:app"
+run-if-changed = "run_if_changed.cli:app"
+run-if = "run_if_changed.cli:app"

@@ -27,6 +27,8 @@ if `md5sum` or `gawk` are missing, or if the default shell does not support pipe
 
 # Install
 
+Install `run-if` with `pip` using the `run-if-changed` package (`run-if` is too similar to another prackage already in the repository).
+
 ```bash
-$ pip install run-if
+$ pip install run-if-changed
 ```
