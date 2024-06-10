@@ -75,7 +75,7 @@ def run_if(arguments: typing.List[str]):
     DB_PATH.write_text(json.dumps(dep_hashes))
 
     if run_command:
-        subprocess.run(dependencies_command_targets[1])
-        raise typer.Exit(0)
+        results = subprocess.run(dependencies_command_targets[1])
+        raise typer.Exit(results.returncode)
 
     raise typer.Exit(0)
