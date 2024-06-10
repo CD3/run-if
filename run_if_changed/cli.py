@@ -78,4 +78,4 @@ def run_if(arguments: typing.List[str]):
         subprocess.run(dependencies_command_targets[1])
         raise typer.Exit(0)
 
-    raise typer.Exit(1)
+    raise typer.Exit(0)
