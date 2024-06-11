@@ -1,6 +1,6 @@
 # `run-if` - conditionally run command if targets don't exist or dependencies have changed.
 
-This is a simple python script that bascially does what checkexec (https://github.com/kurtbuilds/checkexec), but it uses a hash
+This is a simple python script that bascially does what checkexec (https://github.com/kurtbuilds/checkexec) does, but it uses a hash
 of the contents of the dependencies to decide if the command should be run and supports multiple targets.
 
 ```bash
