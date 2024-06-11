@@ -7,35 +7,14 @@ import typing
 import rich
 import typer
 
+from .change_detection import *
+
 app = typer.Typer()
 console = rich.console.Console()
 
 
 CMD_SEP = "=="  # unfortunately, using -> causes problems with the shells...
 DB_NAME = ".run-if.json"
-
-
-def compute_hash(path: pathlib.Path):
-    if path.is_file():
-        return (
-            subprocess.check_output(f"md5sum {path}", shell=True)
-            .decode()
-            .split()[0]
-            .strip()
-        )
-    if path.is_dir():
-        return (
-            subprocess.check_output(
-                f"find {path} -type f | xargs md5sum | gawk '{{print $1}}' | md5sum",
-                shell=True,
-            )
-            .decode()
-            .split()[0]
-            .strip()
-        )
-
-    print(f"Cannot compute hash for '{path}'. It is not a file or directory.")
-    raise typer.Exit(3)
 
 
 @app.command()
@@ -64,7 +43,13 @@ def run_if(arguments: typing.List[str]):
             run_command = True
             break
 
-    dep_hashes = json.loads(DB_PATH.read_text())
+    # load list of previous hashes
+    db = json.loads(DB_PATH.read_text())
+    for section in ["dependency hashes", "exit codes"]:
+        if section not in db:
+            db[section] = {}
+
+    dep_hashes = db["dependency hashes"]
     for dep in [pathlib.Path(a) for a in dependencies_command_targets[0]]:
         _hash = compute_hash(dep)
 
@@ -72,10 +57,15 @@ def run_if(arguments: typing.List[str]):
             run_command = True
         dep_hashes[str(dep)] = _hash
 
-    DB_PATH.write_text(json.dumps(dep_hashes))
+    # write updated hashes back to disk
+    DB_PATH.write_text(json.dumps(db))
 
     if run_command:
-        results = subprocess.run(dependencies_command_targets[1])
-        raise typer.Exit(results.returncode)
+        try:
+            results = subprocess.run(dependencies_command_targets[1])
+            raise typer.Exit(results.returncode)
+        except FileNotFoundError as e:
+            print(f"Error running command: {e}")
+            raise typer.Exit(127)
 
     raise typer.Exit(0)
