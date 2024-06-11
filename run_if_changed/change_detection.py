@@ -1,7 +1,13 @@
+import hashlib
 import pathlib
 import subprocess
 
 import typer
+
+
+def md5sum(text):
+    """Return the md5sum of a text string"""
+    return hashlib.md5(text).hexdigest()
 
 
 def compute_hash(path: pathlib.Path):
