@@ -4,13 +4,13 @@ This is a simple python script that bascially does what checkexec (https://githu
 of the contents of the dependencies to decide if the command should be run, and supports directories as dependencies and multiple targets.
 
 ```bash
-$ run-if main.cpp == g++ main.pp -o main == main
+$ run-if main.cpp == g++ main.cpp -o main == main
 ```
 
-If `main` does not exist, or if the contents of `main.cpp` have changed since the last time it `run-if` was called,
-the command will be run.
+If `main` does not exist, or if the contents of `main.cpp` have changed since the last time `run-if` was called,
+`g++ main.cpp -o main` will be run.
 
-The syntax is different than checkexec
+The syntax is different than checkexec:
 ```bash
 $ run-if [DEPENDENCY...] == <COMMAND> == [TARGET...]
 ```
