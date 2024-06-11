@@ -13,12 +13,20 @@ app = typer.Typer()
 console = rich.console.Console()
 
 
-CMD_SEP = "=="  # unfortunately, using -> causes problems with the shells...
+CMD_SEP = "=="  # unfortunately, using -> and => cause problems with the shells...
 DB_NAME = ".run-if.json"
 
 
 @app.command()
-def run_if(arguments: typing.List[str]):
+def run_if(
+    arguments: typing.List[str],
+    run_until_sucess: typing.Annotated[
+        bool,
+        typer.Option(
+            help="Run command, even if target(s) exists and dependency(ies) have not changed, if it was unsucessful (returned non-zero exit status) the last time."
+        ),
+    ] = False,
+):
     dependencies_command_targets = [[], [], []]
 
     # load the database (just a dict)
@@ -71,13 +79,22 @@ def run_if(arguments: typing.List[str]):
             run_command = True
         dep_hashes[str(dep)] = _hash
 
-    # write updated hashes back to disk
+    # write updated hashes back to disk before we have a chance to crash...
     DB_PATH.write_text(json.dumps(db))
+
+    if run_command == False and run_until_sucess:
+        # if the --run-until-sucess option has been given, we want to
+        # run the command, even if the dependencies have not changes,
+        # if it failed the last time we ran it.
+        if db["exit codes"].get(command_hash,1) != 0:
+            run_command = True
 
     # run command if needed
     if run_command:
         try:
             results = subprocess.run(dependencies_command_targets[1])
+            db["exit codes"][command_hash] = results.returncode
+            DB_PATH.write_text(json.dumps(db))
             raise typer.Exit(results.returncode)
         except FileNotFoundError as e:
             print(f"Error running command: {e}")
