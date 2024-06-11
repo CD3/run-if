@@ -92,7 +92,14 @@ def run_if(
     # run command if needed
     if run_command:
         try:
-            results = subprocess.run(dependencies_command_targets[1])
+            # results = subprocess.run(dependencies_command_targets[1])
+            results = subprocess.Popen(
+                dependencies_command_targets[1],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            for line in iter(results.stdout.readline, b""):
+                print(line.rstrip().decode())
             db["exit codes"][command_hash] = results.returncode
             DB_PATH.write_text(json.dumps(db))
             raise typer.Exit(results.returncode)
