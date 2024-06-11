@@ -86,7 +86,7 @@ def run_if(
         # if the --run-until-sucess option has been given, we want to
         # run the command, even if the dependencies have not changes,
         # if it failed the last time we ran it.
-        if db["exit codes"].get(command_hash,1) != 0:
+        if db["exit codes"].get(command_hash, 1) != 0:
             run_command = True
 
     # run command if needed
