@@ -54,6 +54,38 @@ def test_cli_simple_command():
         assert pathlib.Path("target2.txt").exists()
 
 
+def test_cli_changing_dep_file_cause_rerun():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        pathlib.Path("dep.txt").write_text("")
+        result = runner.invoke(app, ["dep.txt", "==", "echo", "HI"])
+        assert result.exit_code == 0
+        assert result.stdout == "HI\n"
+
+        result = runner.invoke(app, ["dep.txt", "==", "echo", "HI"])
+        assert result.exit_code == 0
+        assert result.stdout == ""
+
+        pathlib.Path("dep.txt").write_text("1")
+        result = runner.invoke(app, ["dep.txt", "==", "echo", "HI"])
+        assert result.exit_code == 0
+        assert result.stdout == "HI\n"
+
+        pathlib.Path("dir").mkdir()
+        result = runner.invoke(app, ["dir", "==", "echo", "HI"])
+        assert result.exit_code == 0
+        assert result.stdout == "HI\n"
+
+        result = runner.invoke(app, ["dir", "==", "echo", "HI"])
+        assert result.exit_code == 0
+        assert result.stdout == ""
+
+        pathlib.Path("dir/dep.txt").write_text("1")
+        result = runner.invoke(app, ["dir", "==", "echo", "HI"])
+        assert result.exit_code == 0
+        assert result.stdout == "HI\n"
+
+
 def test_cli_call_with_no_targets():
     runner = CliRunner()
     with runner.isolated_filesystem():
