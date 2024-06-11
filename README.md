@@ -62,4 +62,7 @@ Note that these rules lead to a few properties:
 - Listing no targets will cause all commands with the same dependencies to run one, and then not again until the dependencies change.
 - If a command has no targets or dependencies, it will not be ran.
 
-
+The `--run-until-success` is useful for my development workflow. I run a build-and-test command in a terminal with `just` and `entr` while editing
+code in Neovim. If I run into a compile error, I can run the build-and-test command in Neovim using [:AsyncRun](https://github.com/skywind3000/asyncrun.vim)
+and jump to the source location of the compiler error. Without the option, `run-if` would not re-run the build-and-test command after finished in the
+terminal unless a source file changed (not just saved).
