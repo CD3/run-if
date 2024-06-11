@@ -43,8 +43,17 @@ def test_cli_simple_command():
         result = runner.invoke(
             app, ["dep.txt", "==", "touch", "target.txt", "==", "target.txt"]
         )
-        assert result.exit_code == 1
+        assert result.exit_code == 0
         assert result.stdout == ""
+
+        # is there is a case to be made for running this if the command to run is different?
+        # there certainly is if no target has been given...
+        result = runner.invoke(
+            app, ["dep.txt", "==", "touch", "target2.txt", "==", "target.txt"]
+        )
+        assert result.exit_code == 0
+        assert result.stdout == ""
+        assert not pathlib.Path("target2.txt").exists()
 
 
 def test_cli_missing_dependency_error():
@@ -79,4 +88,11 @@ def test_cli_missing_no_dependencies():
         assert result.exit_code == 0
 
         result = runner.invoke(app, ["==", "touch", "target.txt", "==", "target.txt"])
-        assert result.exit_code == 1
+        assert result.exit_code == 0
+
+
+def test_cli_command_typo():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(app, ["==", "toch", "target.txt", "==", "target.txt"])
+        assert result.exit_code == 127
