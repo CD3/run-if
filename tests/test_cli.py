@@ -46,14 +46,30 @@ def test_cli_simple_command():
         assert result.exit_code == 0
         assert result.stdout == ""
 
-        # is there is a case to be made for running this if the command to run is different?
-        # there certainly is if no target has been given...
         result = runner.invoke(
             app, ["dep.txt", "==", "touch", "target2.txt", "==", "target.txt"]
         )
         assert result.exit_code == 0
         assert result.stdout == ""
-        assert not pathlib.Path("target2.txt").exists()
+        assert pathlib.Path("target2.txt").exists()
+
+
+def test_cli_call_with_no_targets():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        assert not pathlib.Path(".run-if.json").exists()
+        pathlib.Path("dep.txt").write_text("")
+        result = runner.invoke(app, ["dep.txt", "==", "touch", "target.txt"])
+        assert pathlib.Path(".run-if.json").exists()
+        assert pathlib.Path("dep.txt").exists()
+        assert result.exit_code == 0
+        assert pathlib.Path("target.txt").exists()
+        assert result.stdout == ""
+
+        result = runner.invoke(app, ["dep.txt", "==", "touch", "target2.txt"])
+        assert result.exit_code == 0
+        assert result.stdout == ""
+        assert pathlib.Path("target2.txt").exists()
 
 
 def test_cli_missing_dependency_error():
