@@ -1,8 +1,11 @@
 # `run-if` - conditionally run command if targets don't exist or dependencies have changed.
 
-This is a simple python script that bascially does what `checkexec` (https://github.com/kurtbuilds/checkexec) does, but it uses a hash
-of the contents of the dependencies to decide if the command should be run. It also supports directories as dependencies and multiple targets.
-As with `checkexec`, it pairs well with `just` (https://github.com/casey/just).
+This is a simple python script that basically does what `checkexec` (https://github.com/kurtbuilds/checkexec) does, but it uses a hash
+of the contents of the dependencies to decide if the command should be run
+(similar to [doit](https://pydoit.org/)). It also supports directories as
+dependencies and multiple targets. As with `checkexec`, it pairs well with
+`just` (https://github.com/casey/just). For me, using `run-it` with `just` is simpler
+than `doit` and more powerful than using `checkexec` with `just`.
 
 ```bash
 $ run-if main.cpp == g++ main.cpp -o main == main
@@ -15,15 +18,15 @@ The syntax is different than checkexec:
 ```bash
 $ run-if [DEPENDENCY...] == <COMMAND> == [TARGET...]
 ```
+Originally I tried using "->" instead of "==" to give a visual of "dependencies to into a command that produces targets", but
+it caused problems with the option parser and the shell (the option parser treated '-' as an option indicator and the shell
+treated '>' as a file redirect).
 
 Multiple targets can be listed and both targets and dependencies can be files or directories.
 
 ```bash
 $ run-if -- src/ == cmake --build build == build/test1 build/test2 build/data/
 ```
-
-Currently, the hash of dependencies are being computed with shell commands using the `subprocess` module, so it will fail to run
-if `md5sum` or `find` are missing, or if the default shell does not support pipes.
 
 ## Features
 
