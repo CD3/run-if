@@ -1,9 +1,9 @@
 import argparse
+import importlib
 import json
 import pathlib
 import subprocess
 import typing
-import importlib
 
 import rich
 import typer
@@ -18,10 +18,22 @@ CMD_SEP = "=="  # unfortunately, using -> and => cause problems with the shells.
 DB_NAME = ".run-if.json"
 
 
+def print_version(value: bool):
+    if value:
+        v = importlib.metadata.version("run_if_changed")
+        print(v)
+        raise typer.Exit(0)
+
+
 @app.command()
 def run_if(
-    arguments: typing.List[str] = [],
-    version: typing.Annotated[bool, typer.Option(help="Print version number and exit.")] = False,
+    arguments: typing.List[str],
+    version: typing.Annotated[
+        bool,
+        typer.Option(
+            "--version", help="Print version number and exit.", callback=print_version
+        ),
+    ] = False,
     run_until_success: typing.Annotated[
         bool,
         typer.Option(
@@ -29,11 +41,6 @@ def run_if(
         ),
     ] = False,
 ):
-    if version:
-        v = importlib.metadata.version('run_if_changed')
-        print(v)
-        typer.Exit(0)
-
     dependencies_command_targets = [[], [], []]
 
     # load the database (just a dict)
