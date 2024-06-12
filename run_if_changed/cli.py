@@ -8,7 +8,7 @@ import typing
 import rich
 import typer
 
-from .change_detection import *
+from . import change_detection
 
 app = typer.Typer()
 console = rich.console.Console()
@@ -82,12 +82,14 @@ def run_if(
     # BUT, we only want to compare to the last time we ran _this_ command,
     # that way we can run several command in a row with the same
     # dependencies and they will all run.
-    command_hash = md5sum((" ".join(dependencies_command_targets[1])).encode())
+    change_detection.exclude_dirs = ['.git','__pycache__'] # exclude some common directories
+    change_detection.exclude_patterns = []
+    command_hash = change_detection.md5sum((" ".join(dependencies_command_targets[1])).encode())
     if command_hash not in db["dependency hashes"]:
         db["dependency hashes"][command_hash] = {}
     dep_hashes = db["dependency hashes"][command_hash]
     for dep in [pathlib.Path(a) for a in dependencies_command_targets[0]]:
-        _hash = compute_hash(dep)
+        _hash = change_detection.compute_hash(dep)
 
         if dep_hashes.get(str(dep), None) != _hash:
             run_command = True
@@ -114,6 +116,7 @@ def run_if(
             )
             for line in iter(results.stdout.readline, b""):
                 print(line.rstrip().decode())
+            results.wait()
             db["exit codes"][command_hash] = results.returncode
             DB_PATH.write_text(json.dumps(db))
             raise typer.Exit(results.returncode)

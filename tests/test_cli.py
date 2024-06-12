@@ -144,3 +144,47 @@ def test_cli_command_typo():
     with runner.isolated_filesystem():
         result = runner.invoke(app, ["==", "toch", "target.txt", "==", "target.txt"])
         assert result.exit_code == 127
+
+def test_run_until_sucess():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        pathlib.Path("dep.txt").write_text("")
+        result = runner.invoke(
+            app, ["--run-until-success", "--", "dep.txt", "==", "bash", "-c", "date +%N > date.txt && echo HI"]
+        )
+
+        assert result.exit_code == 0
+        assert result.stdout == "HI\n"
+
+        orig_date_text = pathlib.Path("date.txt").read_text()
+
+
+        result = runner.invoke(
+            app, ["--run-until-success",  "--", "dep.txt", "==", "bash", "-c", "date +%N > date.txt && echo HI"]
+        )
+        assert result.exit_code == 0
+        assert result.stdout == ""
+        new_date_text = pathlib.Path("date.txt").read_text()
+        assert orig_date_text == new_date_text
+
+
+
+
+        result = runner.invoke(
+            app, ["--run-until-success", "--", "dep.txt", "==", "bash", "-c", "date +%N > date.txt && ech HI"]
+        )
+
+        assert result.exit_code == 127
+        assert result.stdout == "bash: line 1: ech: command not found\n"
+
+        orig_date_text = pathlib.Path("date.txt").read_text()
+
+
+        result = runner.invoke(
+            app, ["--run-until-success",  "--", "dep.txt", "==", "bash", "-c", "date +%N > date.txt && ech HI"]
+        )
+        assert result.exit_code == 127
+        assert result.stdout == "bash: line 1: ech: command not found\n"
+        new_date_text = pathlib.Path("date.txt").read_text()
+        assert orig_date_text != new_date_text
+
