@@ -18,7 +18,7 @@ The syntax is different than checkexec:
 ```bash
 $ run-if [DEPENDENCY...] == <COMMAND> == [TARGET...]
 ```
-Originally I tried using "->" instead of "==" to give a visual of "dependencies to into a command that produces targets", but
+Originally I tried using "->" instead of "==" to give a visual of "dependencies go into a command that produces targets", but
 it caused problems with the option parser and the shell (the option parser treated '-' as an option indicator and the shell
 treated '>' as a file redirect).
 
