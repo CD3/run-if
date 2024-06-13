@@ -1,0 +1,4 @@
+run:
+  run-if deps/one.txt == echo 'command 1'
+  run-if deps/one.txt deps/two.txt == echo 'command 2'
+  run-if deps == echo 'command 3'
