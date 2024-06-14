@@ -28,6 +28,27 @@ def print_version(value: bool):
 @app.command()
 def run_if(
     arguments: typing.List[str],
+    dependency: typing.Annotated[
+        typing.List[pathlib.Path],
+        typer.Option(
+            "--dependency",
+            help="File/Directory that will cause command to be run if changed.",
+        ),
+    ] = [],
+    target: typing.Annotated[
+        typing.List[pathlib.Path],
+        typer.Option(
+            "--target",
+            help="File/Directory that will cause command to run if it does not exist.",
+        ),
+    ] = [],
+    sentinal: typing.Annotated[
+        typing.List[pathlib.Path],
+        typer.Option(
+            "--sentinal",
+            help="File/Directory that will cause command to run if it exists.",
+        ),
+    ] = [],
     version: typing.Annotated[
         bool,
         typer.Option(
@@ -41,7 +62,7 @@ def run_if(
         ),
     ] = False,
 ):
-    dependencies_command_targets = [[], [], []]
+    dependencies_command_targets = [dependency, [], target]
 
     # load the database (just a dict)
     DB_PATH = pathlib.Path(DB_NAME)
@@ -53,7 +74,7 @@ def run_if(
             db[section] = {}
 
     # sort the arguments
-    current_type = 0
+    current_type = 0 if "==" in arguments else 1
     for a in arguments:
         if a.strip() == CMD_SEP:
             current_type += 1
@@ -65,14 +86,24 @@ def run_if(
             continue
         dependencies_command_targets[current_type].append(a)
 
+    dependencies = dependencies_command_targets[0]
+    command = dependencies_command_targets[1]
+    targets = dependencies_command_targets[2]
+    sentinals = sentinal
     # we assume that the command should not be run
     # because it is obviously expensive (if it wasn't you would not need us).
     run_command = False
     # convince us that it _does_ need to run...
 
     # check for missing targets
-    for t in [pathlib.Path(a) for a in dependencies_command_targets[2]]:
+    for t in [pathlib.Path(a) for a in targets]:
         if not t.exists():
+            run_command = True
+            break
+
+    # if _any_ sentinal files exist, run teh command
+    for s in [pathlib.Path(a) for a in sentinals]:
+        if s.exists():
             run_command = True
             break
 
@@ -82,13 +113,18 @@ def run_if(
     # BUT, we only want to compare to the last time we ran _this_ command,
     # that way we can run several command in a row with the same
     # dependencies and they will all run.
-    change_detection.exclude_dirs = ['.git','__pycache__'] # exclude some common directories
+    change_detection.exclude_dirs = [
+        ".git",
+        "__pycache__",
+    ]  # exclude some common directories
     change_detection.exclude_patterns = []
-    command_hash = change_detection.md5sum((" ".join(dependencies_command_targets[1])).encode())
+    command_hash = change_detection.md5sum(
+        (" ".join(command)).encode()
+    )
     if command_hash not in db["dependency hashes"]:
         db["dependency hashes"][command_hash] = {}
     dep_hashes = db["dependency hashes"][command_hash]
-    for dep in [pathlib.Path(a) for a in dependencies_command_targets[0]]:
+    for dep in [pathlib.Path(a) for a in dependencies]:
         _hash = change_detection.compute_hash(dep)
 
         if dep_hashes.get(str(dep), None) != _hash:
@@ -108,9 +144,8 @@ def run_if(
     # run command if needed
     if run_command:
         try:
-            # results = subprocess.run(dependencies_command_targets[1])
             results = subprocess.Popen(
-                dependencies_command_targets[1],
+                command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
             )
