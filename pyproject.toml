@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "run-if-changed"
-version = "0.3.2"
+version = "0.4.0"
 description = ""
 authors = ["CD Clark III <clifton.clark@gmail.com>"]
 readme = "README.md"
