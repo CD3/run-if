@@ -43,7 +43,23 @@ Install `run-if` with `pip` using the `run-if-changed` package (`run-if` is too 
 $ pip install run-if-changed
 ```
 
-## Rules for determining if a command will be run
+## Concepts
+
+`run-if` is a tool for running commands if  certain conditions are met. Several different types of files/directories are considered when
+determining if a command should run.
+
+targets
+: Files or directories that will cause the command to run if they are _**not** present_.
+
+dependencies
+: Files or directories that will cause the command to run if they _change_.
+
+sentinals
+: Files or directories that will cause the command to run if they _**do** exist_.
+
+
+
+### Rules for determining if a command will be run
 
 `run-if` does not use modification times to determine if a command should be run. Instead, it writes a small JSON
 file in the current working directory to cache information between runs that is used to determine if a command should run.
@@ -65,7 +81,59 @@ Note that these rules lead to a few properties:
 - Listing no targets will cause all commands with the same dependencies to run one, and then not again until the dependencies change.
 - If a command has no targets or dependencies, it will not be ran.
 
+## Usage
+
+
+### Options
+
+`run-if` supports two methods for specifying dependencies and targets. The original syntax allowed the user to list dependencies, the command, and targets
+all as one long list of arguments:
+
+```bash
+$ run-if -- dep1.txt dep2.txt == cmake --build . == build/a.out
+```
+
+Originally we used '->' instead of '=='
+
+```bash
+$ run-if -- dep1.txt dep2.txt -> cmake --build . -> build/a.out
+```
+
+to sort of imply that "dependencies" to into "command" which produced "targets". Since then, we have added support for giving dependencies and targets with command
+line options, which is a more "standard" interface. It also enabled adding other file types, not just dependencies and targets.
+
+`--dependency`
+: Add a dependency
+
+`--target`
+: Add a target
+
+`--sentinal`
+: Add a sentinal
+
+`--run-until-success`
+: Always run the command if the last attempt was unsucessful.
+
 The `--run-until-success` is useful for my development workflow. I run a build-and-test command in a terminal with `just` and `entr` while editing
 code in Neovim. If I run into a compile error, I can run the build-and-test command in Neovim using [:AsyncRun](https://github.com/skywind3000/asyncrun.vim)
 and jump to the source location of the compiler error. Without the option, `run-if` would not re-run the build-and-test command after finished in the
 terminal unless a source file changed (not just saved).
+
+### Examples
+
+Run Conan if the the projects `conanfile.txt` files changes
+
+```bash
+$ run-if --dependencies conanfile.txt -- conan install . --build missing
+```
+Note that the `--` is require to allow passing options to the conan command.
+
+Run CMake if the cache file has not been created or the CMakeLists.txt file has changed
+```bash
+$ run-if --dependencies CMakeLists.txt --target build/CMakeCache.txt -- bash -c 'cd build && cmake ..'
+```
+
+Run a `make clean` if the build directory exists
+```bash
+$ run-if --sentinal build -- make clean
+```
