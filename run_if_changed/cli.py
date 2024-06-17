@@ -151,7 +151,7 @@ def run_if(
         f"  skipping files in directories named {', '.join(change_detection.exclude_dirs)}"
     )
     change_detection.exclude_patterns = []
-    command_hash = change_detection.md5sum((" ".join(command)).encode())
+    command_hash = change_detection.hash_func((" ".join(command)).encode())
     if command_hash not in db["dependency hashes"]:
         db["dependency hashes"][command_hash] = {}
         verbose_print("  no hashes in the cache for command.")
