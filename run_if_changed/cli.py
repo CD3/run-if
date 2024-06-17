@@ -61,6 +61,12 @@ def run_if(
             help="Run command, even if target(s) exists and dependency(ies) have not changed, if it was unsuccessful (returned non-zero exit status) the last time."
         ),
     ] = False,
+    force: typing.Annotated[
+        bool,
+        typer.Option(
+            help="Run command no matter what."
+        ),
+    ] = False,
 ):
     dependencies_command_targets = [dependency, [], target]
 
@@ -142,7 +148,7 @@ def run_if(
             run_command = True
 
     # run command if needed
-    if run_command:
+    if run_command or force:
         try:
             results = subprocess.Popen(
                 command,

@@ -112,7 +112,11 @@ line options, which is a more "standard" interface. It also enabled adding other
 : Add a sentinal
 
 `--run-until-success`
-: Always run the command if the last attempt was unsucessful.
+: Run the command, even if dependencies have not changed and the targets exists, if the last attempt was unsuccessful.
+
+`--force`
+: Run the command, even if the dependencies have not changed and the targets exists. This will still perform all checks
+  and update the cache.
 
 The `--run-until-success` is useful for my development workflow. I run a build-and-test command in a terminal with `just` and `entr` while editing
 code in Neovim. If I run into a compile error, I can run the build-and-test command in Neovim using [:AsyncRun](https://github.com/skywind3000/asyncrun.vim)
