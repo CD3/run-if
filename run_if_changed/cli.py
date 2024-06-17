@@ -63,12 +63,27 @@ def run_if(
     ] = False,
     force: typing.Annotated[
         bool,
+        typer.Option(help="Run command no matter what."),
+    ] = False,
+    dry_run: typing.Annotated[
+        bool,
         typer.Option(
-            help="Run command no matter what."
+            help="Don't run the command or modify the cache, just report if the command would be run."
         ),
+    ] = False,
+    verbose: typing.Annotated[
+        bool,
+        typer.Option(help="Print information about the run."),
     ] = False,
 ):
     dependencies_command_targets = [dependency, [], target]
+
+    if dry_run:
+        verbose = True
+
+    def verbose_print(*args):
+        if verbose:
+            print(*args)
 
     # load the database (just a dict)
     DB_PATH = pathlib.Path(DB_NAME)
@@ -102,16 +117,24 @@ def run_if(
     # convince us that it _does_ need to run...
 
     # check for missing targets
+    verbose_print("Checking targets:")
     for t in [pathlib.Path(a) for a in targets]:
         if not t.exists():
             run_command = True
+            verbose_print(f"  '{t}' does NOT exist, command will be run.")
             break
+        else:
+            verbose_print(f"  '{t}' exists.")
 
     # if _any_ sentinal files exist, run teh command
+    verbose_print("Checking sentinals:")
     for s in [pathlib.Path(a) for a in sentinals]:
         if s.exists():
             run_command = True
+            verbose_print(f"  '{s}' exists, command will be run.")
             break
+        else:
+            verbose_print(f"  '{s}' does not exist.")
 
     # check for changed dependencies
     # do determine if a dependency has changed, we compute its hash
@@ -123,32 +146,50 @@ def run_if(
         ".git",
         "__pycache__",
     ]  # exclude some common directories
-    change_detection.exclude_patterns = []
-    command_hash = change_detection.md5sum(
-        (" ".join(command)).encode()
+    verbose_print("Checking dependencies:")
+    verbose_print(
+        f"  skipping files in directories named {', '.join(change_detection.exclude_dirs)}"
     )
+    change_detection.exclude_patterns = []
+    command_hash = change_detection.md5sum((" ".join(command)).encode())
     if command_hash not in db["dependency hashes"]:
         db["dependency hashes"][command_hash] = {}
+        verbose_print("  no hashes in the cache for command.")
     dep_hashes = db["dependency hashes"][command_hash]
     for dep in [pathlib.Path(a) for a in dependencies]:
         _hash = change_detection.compute_hash(dep)
 
-        if dep_hashes.get(str(dep), None) != _hash:
+        cached_hash = dep_hashes.get(str(dep), None)
+        if cached_hash != _hash:
+            verbose_print(
+                f"  hash for '{dep}' differs from cache. current = '{_hash}', old = '{cached_hash}'"
+            )
             run_command = True
-        dep_hashes[str(dep)] = _hash
+            dep_hashes[str(dep)] = _hash
+        else:
+            verbose_print(
+                f"  hash for '{dep}' matches cache. current = '{_hash}', old = '{cached_hash}'"
+            )
 
     # write updated hashes back to disk before we have a chance to crash...
-    DB_PATH.write_text(json.dumps(db))
+    if not dry_run:
+        DB_PATH.write_text(json.dumps(db))
 
     if run_command == False and run_until_success:
+        verbose_print("Checking exit status of last run.")
         # if the --run-until-success option has been given, we want to
         # run the command, even if the dependencies have not changes,
         # if it failed the last time we ran it.
         if db["exit codes"].get(command_hash, 1) != 0:
             run_command = True
+            verbose_print("Exit status was non-zero, command will run.")
+        else:
+            verbose_print("Exit status was zero.")
+    else:
+        verbose_print("Exit status of previous run is being ignored.")
 
     # run command if needed
-    if run_command or force:
+    if (run_command or force) and not dry_run:
         try:
             results = subprocess.Popen(
                 command,

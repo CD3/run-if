@@ -145,12 +145,22 @@ def test_cli_command_typo():
         result = runner.invoke(app, ["==", "toch", "target.txt", "==", "target.txt"])
         assert result.exit_code == 127
 
+
 def test_run_until_sucess():
     runner = CliRunner()
     with runner.isolated_filesystem():
         pathlib.Path("dep.txt").write_text("")
         result = runner.invoke(
-            app, ["--run-until-success", "--", "dep.txt", "==", "bash", "-c", "date +%N > date.txt && echo HI"]
+            app,
+            [
+                "--run-until-success",
+                "--",
+                "dep.txt",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date.txt && echo HI",
+            ],
         )
 
         assert result.exit_code == 0
@@ -158,20 +168,34 @@ def test_run_until_sucess():
 
         orig_date_text = pathlib.Path("date.txt").read_text()
 
-
         result = runner.invoke(
-            app, ["--run-until-success",  "--", "dep.txt", "==", "bash", "-c", "date +%N > date.txt && echo HI"]
+            app,
+            [
+                "--run-until-success",
+                "--",
+                "dep.txt",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date.txt && echo HI",
+            ],
         )
         assert result.exit_code == 0
         assert result.stdout == ""
         new_date_text = pathlib.Path("date.txt").read_text()
         assert orig_date_text == new_date_text
 
-
-
-
         result = runner.invoke(
-            app, ["--run-until-success", "--", "dep.txt", "==", "bash", "-c", "date +%N > date.txt && ech HI"]
+            app,
+            [
+                "--run-until-success",
+                "--",
+                "dep.txt",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date.txt && ech HI",
+            ],
         )
 
         assert result.exit_code == 127
@@ -179,9 +203,17 @@ def test_run_until_sucess():
 
         orig_date_text = pathlib.Path("date.txt").read_text()
 
-
         result = runner.invoke(
-            app, ["--run-until-success",  "--", "dep.txt", "==", "bash", "-c", "date +%N > date.txt && ech HI"]
+            app,
+            [
+                "--run-until-success",
+                "--",
+                "dep.txt",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date.txt && ech HI",
+            ],
         )
         assert result.exit_code == 127
         assert result.stdout == "bash: line 1: ech: command not found\n"
@@ -194,20 +226,53 @@ def test_deps_and_targets_as_options():
     with runner.isolated_filesystem():
         pathlib.Path("dep.txt").write_text("")
         result = runner.invoke(
-            app, ["--run-until-success", "--dependency", "dep.txt", "--target", "date.txt", "--", "bash", "-c", "date +%N > date.txt && echo HI"]
+            app,
+            [
+                "--run-until-success",
+                "--dependency",
+                "dep.txt",
+                "--target",
+                "date.txt",
+                "--",
+                "bash",
+                "-c",
+                "date +%N > date.txt && echo HI",
+            ],
         )
         assert result.stdout == "HI\n"
         assert result.exit_code == 0
 
         result = runner.invoke(
-            app, ["--run-until-success", "--dependency", "dep.txt", "--target", "date.txt", "--", "bash", "-c", "date +%N > date.txt && echo HI"]
+            app,
+            [
+                "--run-until-success",
+                "--dependency",
+                "dep.txt",
+                "--target",
+                "date.txt",
+                "--",
+                "bash",
+                "-c",
+                "date +%N > date.txt && echo HI",
+            ],
         )
         assert result.stdout == ""
         assert result.exit_code == 0
 
         pathlib.Path("dep.txt").write_text("1")
         result = runner.invoke(
-            app, ["--run-until-success", "--dependency", "dep.txt", "--target", "date.txt", "--", "bash", "-c", "date +%N > date.txt && echo HI"]
+            app,
+            [
+                "--run-until-success",
+                "--dependency",
+                "dep.txt",
+                "--target",
+                "date.txt",
+                "--",
+                "bash",
+                "-c",
+                "date +%N > date.txt && echo HI",
+            ],
         )
         assert result.stdout == "HI\n"
         assert result.exit_code == 0
@@ -219,55 +284,172 @@ def test_missing_option_and_arg_deps_and_targets():
         pathlib.Path("dep1.txt").write_text("")
         pathlib.Path("dep2.txt").write_text("")
         result = runner.invoke(
-            app, ["--run-until-success", "--dependency", "dep1.txt", "--target", "date1.txt", "--","dep2.txt", "==", "bash", "-c", "date +%N > date1.txt && echo HI", "==", "date2.txt"]
+            app,
+            [
+                "--run-until-success",
+                "--dependency",
+                "dep1.txt",
+                "--target",
+                "date1.txt",
+                "--",
+                "dep2.txt",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date1.txt && echo HI",
+                "==",
+                "date2.txt",
+            ],
         )
         assert result.stdout == "HI\n"
         assert result.exit_code == 0
 
         result = runner.invoke(
-            app, ["--run-until-success", "--dependency", "dep1.txt", "--target", "date1.txt", "--","dep2.txt", "==", "bash", "-c", "date +%N > date1.txt && echo HI", "==", "date2.txt"]
+            app,
+            [
+                "--run-until-success",
+                "--dependency",
+                "dep1.txt",
+                "--target",
+                "date1.txt",
+                "--",
+                "dep2.txt",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date1.txt && echo HI",
+                "==",
+                "date2.txt",
+            ],
         )
         assert result.stdout == "HI\n"
         assert result.exit_code == 0
-
 
         pathlib.Path("date2.txt").write_text("")
         result = runner.invoke(
-            app, ["--run-until-success", "--dependency", "dep1.txt", "--target", "date1.txt", "--","dep2.txt", "==", "bash", "-c", "date +%N > date1.txt && echo HI", "==", "date2.txt"]
+            app,
+            [
+                "--run-until-success",
+                "--dependency",
+                "dep1.txt",
+                "--target",
+                "date1.txt",
+                "--",
+                "dep2.txt",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date1.txt && echo HI",
+                "==",
+                "date2.txt",
+            ],
         )
         assert result.stdout == ""
         assert result.exit_code == 0
 
         pathlib.Path("dep1.txt").write_text("1")
         result = runner.invoke(
-            app, ["--run-until-success", "--dependency", "dep1.txt", "--target", "date1.txt", "--","dep2.txt", "==", "bash", "-c", "date +%N > date1.txt && echo HI", "==", "date2.txt"]
+            app,
+            [
+                "--run-until-success",
+                "--dependency",
+                "dep1.txt",
+                "--target",
+                "date1.txt",
+                "--",
+                "dep2.txt",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date1.txt && echo HI",
+                "==",
+                "date2.txt",
+            ],
         )
         assert result.stdout == "HI\n"
         assert result.exit_code == 0
 
         result = runner.invoke(
-            app, ["--run-until-success", "--dependency", "dep1.txt", "--target", "date1.txt", "--","dep2.txt", "==", "bash", "-c", "date +%N > date1.txt && echo HI", "==", "date2.txt"]
+            app,
+            [
+                "--run-until-success",
+                "--dependency",
+                "dep1.txt",
+                "--target",
+                "date1.txt",
+                "--",
+                "dep2.txt",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date1.txt && echo HI",
+                "==",
+                "date2.txt",
+            ],
         )
         assert result.stdout == ""
         assert result.exit_code == 0
 
         pathlib.Path("dep2.txt").write_text("1")
         result = runner.invoke(
-            app, ["--run-until-success", "--dependency", "dep1.txt", "--target", "date1.txt", "--","dep2.txt", "==", "bash", "-c", "date +%N > date1.txt && echo HI", "==", "date2.txt"]
+            app,
+            [
+                "--run-until-success",
+                "--dependency",
+                "dep1.txt",
+                "--target",
+                "date1.txt",
+                "--",
+                "dep2.txt",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date1.txt && echo HI",
+                "==",
+                "date2.txt",
+            ],
         )
         assert result.stdout == "HI\n"
         assert result.exit_code == 0
 
         result = runner.invoke(
-            app, ["--run-until-success", "--dependency", "dep1.txt", "--target", "date1.txt", "--","dep2.txt", "==", "bash", "-c", "date +%N > date1.txt && echo HI", "==", "date2.txt"]
+            app,
+            [
+                "--run-until-success",
+                "--dependency",
+                "dep1.txt",
+                "--target",
+                "date1.txt",
+                "--",
+                "dep2.txt",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date1.txt && echo HI",
+                "==",
+                "date2.txt",
+            ],
         )
         assert result.stdout == ""
         assert result.exit_code == 0
 
-
-
         result = runner.invoke(
-            app, ["--run-until-success", "--dependency", "dep1.txt", "--dependency", "dep2.txt", "--target", "date1.txt","--target", "date2.txt", "--", "bash", "-c", "date +%N > date1.txt && echo HI"]
+            app,
+            [
+                "--run-until-success",
+                "--dependency",
+                "dep1.txt",
+                "--dependency",
+                "dep2.txt",
+                "--target",
+                "date1.txt",
+                "--target",
+                "date2.txt",
+                "--",
+                "bash",
+                "-c",
+                "date +%N > date1.txt && echo HI",
+            ],
         )
         assert result.stdout == ""
         assert result.exit_code == 0
@@ -275,7 +457,22 @@ def test_missing_option_and_arg_deps_and_targets():
         pathlib.Path("dep2.txt").write_text("")
 
         result = runner.invoke(
-            app, ["--run-until-success", "--dependency", "dep1.txt", "--dependency", "dep2.txt", "--target", "date1.txt","--target", "date2.txt", "--", "bash", "-c", "date +%N > date1.txt && echo HI"]
+            app,
+            [
+                "--run-until-success",
+                "--dependency",
+                "dep1.txt",
+                "--dependency",
+                "dep2.txt",
+                "--target",
+                "date1.txt",
+                "--target",
+                "date2.txt",
+                "--",
+                "bash",
+                "-c",
+                "date +%N > date1.txt && echo HI",
+            ],
         )
         assert result.stdout == "HI\n"
         assert result.exit_code == 0
@@ -284,16 +481,110 @@ def test_missing_option_and_arg_deps_and_targets():
 def test_sentinals():
     runner = CliRunner()
     with runner.isolated_filesystem():
-
         result = runner.invoke(
-            app, ["--sentinal", "sent1.txt",  "--", "==", "bash", "-c", "date +%N > date1.txt && echo HI", "=="]
+            app,
+            [
+                "--sentinal",
+                "sent1.txt",
+                "--",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date1.txt && echo HI",
+                "==",
+            ],
         )
         assert result.stdout == ""
         assert result.exit_code == 0
 
         pathlib.Path("sent1.txt").write_text("")
         result = runner.invoke(
-            app, ["--sentinal", "sent1.txt",  "--", "==", "bash", "-c", "date +%N > date1.txt && echo HI", "=="]
+            app,
+            [
+                "--sentinal",
+                "sent1.txt",
+                "--",
+                "==",
+                "bash",
+                "-c",
+                "date +%N > date1.txt && echo HI",
+                "==",
+            ],
         )
         assert result.stdout == "HI\n"
+        assert result.exit_code == 0
+
+
+def test_dry_run():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        pathlib.Path("dep.txt").write_text("")
+        result = runner.invoke(
+            app,
+            [
+                "--dry-run",
+                "--",
+                "dep.txt",
+                "==",
+                "touch",
+                "target.txt",
+                "==",
+                "target.txt",
+            ],
+        )
+
+        assert "Checking targets:" in result.stdout
+        assert "Checking sentinals:" in result.stdout
+        assert "Checking dependencies:" in result.stdout
+        assert "'target.txt' does NOT exist, command will be run." in result.stdout
+        assert "no hashes in the cache for command." in result.stdout
+        assert "Exit status of previous run is being ignored" in result.stdout
+        assert result.exit_code == 0
+
+        result = runner.invoke(
+            app,
+            [
+                "--dry-run",
+                "--",
+                "dep.txt",
+                "==",
+                "touch",
+                "target.txt",
+                "==",
+                "target.txt",
+            ],
+        )
+
+        assert "Checking targets:" in result.stdout
+        assert "Checking sentinals:" in result.stdout
+        assert "Checking dependencies:" in result.stdout
+        assert "'target.txt' does NOT exist, command will be run." in result.stdout
+        assert "no hashes in the cache for command." in result.stdout
+        assert "Exit status of previous run is being ignored" in result.stdout
+        assert result.exit_code == 0
+
+        result = runner.invoke(
+            app, ["--", "dep.txt", "==", "touch", "target.txt", "==", "target.txt"]
+        )
+
+        result = runner.invoke(
+            app,
+            [
+                "--dry-run",
+                "--",
+                "dep.txt",
+                "==",
+                "touch",
+                "target.txt",
+                "==",
+                "target.txt",
+            ],
+        )
+
+        assert "Checking targets:" in result.stdout
+        assert "Checking sentinals:" in result.stdout
+        assert "Checking dependencies:" in result.stdout
+        assert "'target.txt' exists." in result.stdout
+        assert "hash for 'dep.txt' matches cache." in result.stdout
+        assert "Exit status of previous run is being ignored" in result.stdout
         assert result.exit_code == 0
