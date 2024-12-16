@@ -5,6 +5,7 @@ import pathlib
 import subprocess
 import typing
 
+import filelock
 import rich
 import typer
 
@@ -16,6 +17,7 @@ console = rich.console.Console()
 
 CMD_SEP = "=="  # unfortunately, using -> and => cause problems with the shells...
 DB_NAME = ".run-if.json"
+DB_LOCK_NAME = ".run-if.json.lock"
 
 
 def print_version(value: bool):
@@ -87,9 +89,14 @@ def run_if(
 
     # load the database (just a dict)
     DB_PATH = pathlib.Path(DB_NAME)
-    if not DB_PATH.exists():
-        DB_PATH.write_text("{}")
-    db = json.loads(DB_PATH.read_text())
+    # all reads and writes need to be protected with a lock
+    # so that we don't try reading the db while another process
+    # is in the middle of writing it.
+    DB_LOCK = filelock.FileLock(DB_LOCK_NAME)
+    with DB_LOCK:
+        if not DB_PATH.exists():
+            DB_PATH.write_text("{}")
+        db = json.loads(DB_PATH.read_text())
     for section in ["dependency hashes", "exit codes"]:
         if section not in db:
             db[section] = {}
@@ -173,7 +180,8 @@ def run_if(
 
     # write updated hashes back to disk before we have a chance to crash...
     if not dry_run:
-        DB_PATH.write_text(json.dumps(db))
+        with DB_LOCK:
+            DB_PATH.write_text(json.dumps(db))
 
     if run_command == False and run_until_success:
         verbose_print("Checking exit status of last run.")
@@ -200,7 +208,8 @@ def run_if(
                 print(line.rstrip().decode())
             results.wait()
             db["exit codes"][command_hash] = results.returncode
-            DB_PATH.write_text(json.dumps(db))
+            with DB_LOCK:
+                DB_PATH.write_text(json.dumps(db))
             raise typer.Exit(results.returncode)
         except FileNotFoundError as e:
             print(f"Error running command: {e}")

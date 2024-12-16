@@ -1,6 +1,8 @@
 import contextlib
+import multiprocessing
 import os
 import pathlib
+import time
 
 import pytest
 from typer.testing import CliRunner
@@ -588,3 +590,37 @@ def test_dry_run():
         assert "hash for 'dep.txt' matches cache." in result.stdout
         assert "Exit status of previous run is being ignored" in result.stdout
         assert result.exit_code == 0
+
+
+def invoke(job):
+    runner = CliRunner()
+    result = runner.invoke(app, job)
+    return result.exit_code, result.stdout
+
+
+def test_running_in_parallel():
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        start = time.perf_counter()
+        jobs = []
+        for i in range(10):
+            jobs.append(
+                [
+                    "==",
+                    "sleep",
+                    "1",
+                    "==",
+                    "target.txt",
+                ]
+            )
+
+        with multiprocessing.Pool() as p:
+            for exit_code, stdout in p.map(invoke, jobs):
+                assert exit_code == 0
+                assert stdout == ""
+
+        stop = time.perf_counter()
+        duration = stop - start
+
+        assert duration < 1.5
