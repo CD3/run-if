@@ -624,3 +624,4 @@ def test_running_in_parallel():
         duration = stop - start
 
         assert duration < 1.5
+

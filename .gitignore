@@ -1,3 +1,5 @@
 dist
 __pycache__/
 .run-if.json
+tests/.run-if.json.lock
+uv.lock

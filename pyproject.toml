@@ -11,7 +11,10 @@ requires-python = ">=3.10,<4.0"
 
 [tool.uv]
 managed = true
-dev-dependencies = ["pytest>=8.2.2,<9.0.0"]
+dev-dependencies = [
+    "cram>=0.7",
+    "pytest>=8.2.2,<9.0.0",
+]
 
 [tool.hatch]
 [tool.hatch.metadata]

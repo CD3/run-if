@@ -2,6 +2,7 @@ import argparse
 import importlib
 import json
 import pathlib
+import shlex
 import subprocess
 import typing
 
@@ -70,7 +71,7 @@ def run_if(
     shell: typing.Annotated[
         bool,
         typer.Option(
-            help="Use shell to run command. Necessary for running commands that use a shell buildtin."
+            help="Use shell to run command. Necessary for running commands that use a shell builtin."
         ),
     ] = False,
     dry_run: typing.Annotated[
@@ -205,10 +206,10 @@ def run_if(
     # run command if needed
     if (run_command or force) and not dry_run:
         try:
+            if shell:
+                command = shlex.join(command)
             results = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
+                command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=shell
             )
             for line in iter(results.stdout.readline, b""):
                 print(line.rstrip().decode())

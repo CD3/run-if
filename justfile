@@ -1,6 +1,11 @@
 set positional-arguments
-test *args:
-        poetry run pytest -s "$@"
+
+test: test-pytest test-cram
+
+test-pytest *args:
+        uv run pytest -s "$@"
+test-cram *args:
+        uv run cram --shell /bin/bash "$@" tests/*.t
 
 pub:
   rm dist -r
