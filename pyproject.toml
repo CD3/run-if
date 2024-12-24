@@ -1,23 +1,28 @@
-[tool.poetry]
+[project]
 name = "run-if-changed"
 version = "0.5.1"
 description = ""
-authors = ["CD Clark III <clifton.clark@gmail.com>"]
+authors = [{name = "CD Clark III",email = "clifton.clark@gmail.com"}]
 readme = "README.md"
+dependencies = ["typer>=0.12.3,<0.13.0", "filelock>=3.16.1,<4.0.0"]
+requires-python = ">=3.10,<4.0"
 
-[tool.poetry.dependencies]
-python = "^3.10"
-typer = "^0.12.3"
-filelock = "^3.16.1"
+[tool]
 
+[tool.uv]
+managed = true
+dev-dependencies = ["pytest>=8.2.2,<9.0.0"]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.2.2"
+[tool.hatch]
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/run_if_changed"]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.scripts]
-run-if-changed = "run_if_changed.cli:app"
-run-if = "run_if_changed.cli:app"
+[project.scripts]
+"run-if" = "run_if_changed.cli:app"
