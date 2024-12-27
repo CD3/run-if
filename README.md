@@ -1,10 +1,11 @@
 # `run-if` - conditionally run command if targets don't exist or dependencies have changed.
 
-This is a simple python script that basically does what `checkexec` (https://github.com/kurtbuilds/checkexec) does, but it uses a hash
-of the contents of the dependencies to decide if the command should be run
-(similar to [doit](https://pydoit.org/)). It also supports directories as
-dependencies and multiple targets. As with `checkexec`, it pairs well with
-`just` (https://github.com/casey/just). For me, using `run-it` with `just` is simpler
+This is a simple python script that basically does what `checkexec`
+(https://github.com/kurtbuilds/checkexec) does, but it uses a hash of the
+contents of the dependencies to decide if the command should be run (similar to
+[doit](https://pydoit.org/)). It also supports directories as dependencies and
+multiple targets. As with `checkexec`, it pairs well with `just`
+(https://github.com/casey/just). For me, using `run-it` with `just` is simpler
 than `doit` and more powerful than using `checkexec` with `just`.
 
 ```bash

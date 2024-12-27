@@ -3,7 +3,7 @@ set positional-arguments
 test: test-pytest test-cram
 
 test-pytest *args:
-        uv run pytest -s "$@"
+        uv run pytest "$@"
 test-cram *args:
         uv run cram --shell /bin/bash "$@" tests/*.t
 
