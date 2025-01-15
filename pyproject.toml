@@ -1,6 +1,6 @@
 [project]
 name = "run-if-changed"
-version = "0.5.1"
+version = "0.5.2"
 description = ""
 authors = [{name = "CD Clark III",email = "clifton.clark@gmail.com"}]
 readme = "README.md"
