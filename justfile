@@ -1,12 +1,10 @@
-set positional-arguments
+list:
+  just --list
 
-test: test-pytest test-cram
+test:
+  cd tests/workspace && cargo test -- --test-threads 1
+  cd tests/cram && cram *.t
 
-test-pytest *args:
-        uv run pytest "$@"
-test-cram *args:
-        uv run cram --shell /bin/bash "$@" tests/*.t
 
-pub:
-  rm dist -r
-  poetry publish --build
+bench:
+  cargo bench
