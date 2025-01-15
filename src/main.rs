@@ -118,7 +118,7 @@ fn main() -> Result<()> {
 
     // check to see if any dependencies have changed
     for dep in cli.dependency.iter() {
-        debug!("Checking if dependency '{}' has changed.", dep.display());
+        debug!("Checking if dependency '{}' has changed...", dep.display());
         if !dep.exists() {
             eprintln!("Error: dependency '{}' does not exist.", dep.display());
             std::process::exit(1);
@@ -129,7 +129,7 @@ fn main() -> Result<()> {
         if !cmd_status.dependencies.contains_key(&dep_name) {
             // is dependency in the cache?
             debug!(
-                "                       '{}' not in cache. Will run command and add to the cache.",
+                "  '{}' not in cache. Will execute command and update the cache.",
                 dep.display(),
             );
 
@@ -143,29 +143,29 @@ fn main() -> Result<()> {
                 },
             );
         } else {
-            debug!("                       '{}' found in cache.", dep.display(),);
+            debug!("  Found '{}' in cache.", dep.display(),);
             debug!(
-                "                       '{}' checking if file has been modified.",
+                "  Checking if '{}' has been modified...",
                 dep.display(),
             );
             // check if file has been "modified" (saved) since last time
             if cmd_status.dependencies.get(&dep_name).unwrap().mtime != dep_mtime {
                 debug!(
-                    "                       '{}' has been modified: mtime: {}, cached mtime: {}",
+                    "  '{}' has been modified: mtime: {}, cached mtime: {}",
                     dep.display(),
                     dep_mtime,
                     cmd_status.dependencies.get(&dep_name).unwrap().mtime
                 );
                 cmd_status.dependencies.get_mut(&dep_name).unwrap().mtime = dep_mtime;
                 debug!(
-                    "                       '{}' modified. Checking if contents changed.",
+                    "  Checking if contents of '{}' have changed...",
                     dep.display(),
                 );
                 // check if file has _actually_ been modified
                 let dep_hash = change_detection::hash_path(dep)?;
                 if cmd_status.dependencies.get(&dep_name).unwrap().content_hash != dep_hash {
                     debug!(
-                        "                       '{}' contents have changed.",
+                        "  '{}' contents have changed. Command will be executed.",
                         dep.display(),
                     );
                     run_command = true;
@@ -176,7 +176,7 @@ fn main() -> Result<()> {
                         .content_hash = dep_hash;
                 } else {
                     debug!(
-                        "                       '{}' contents have NOT changed.",
+                        "  '{}' contents have NOT changed.",
                         dep.display(),
                     );
                 }
@@ -188,7 +188,7 @@ fn main() -> Result<()> {
     for tar in cli.target.iter() {
         if !tar.exists() {
             debug!(
-                "target '{}' does not exist. Command will be run.",
+                "target '{}' does not exist. Command will be executed.",
                 tar.display()
             );
             run_command = true;
@@ -197,7 +197,7 @@ fn main() -> Result<()> {
     }
     // check to see if any sentinals exist
     for sen in cli.sentinal.iter() {
-        debug!("sentinal '{}' exists. Command will be run.", sen.display());
+        debug!("sentinal '{}' exists. Command will be executed.", sen.display());
         if sen.exists() {
             run_command = true;
             break;
@@ -211,18 +211,18 @@ fn main() -> Result<()> {
     if !run_command {
         if cli.try_until_success {
             if cmd_status.exit_code.unwrap() != 0 {
-                debug!("Command returned non-zero exit code last time and --try-until-success was given. Command will be run.");
+                debug!("Command returned non-zero exit code last time and --try-until-success was given. Command will be executed.");
                 run_command = true;
             }
         }
     }
 
     if run_command {
-        debug!("Running command.");
+        debug!("Executing command `{}`.", &cli.command[0]);
         let status = std::process::Command::new(&cli.command[0])
             .args(&cli.command[1..])
             .status()
-            .expect("Could not run the command");
+            .expect(&format!("Error executing the command. Command parts: {:?}", cli.command));
         cmd_status.exit_code = status.code();
     }
     // write the cache file even if we didn't run the command
