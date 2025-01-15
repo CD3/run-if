@@ -208,14 +208,17 @@ fn main() -> Result<()> {
         run_command = true
     }
 
-    if cli.try_until_success {
-        if cmd_status.exit_code.unwrap() != 0 {
-            run_command = true;
+    if !run_command {
+        if cli.try_until_success {
+            if cmd_status.exit_code.unwrap() != 0 {
+                debug!("Command returned non-zero exit code last time and --try-until-success was given. Command will be run.");
+                run_command = true;
+            }
         }
     }
 
     if run_command {
-        debug!("Running command");
+        debug!("Running command.");
         let status = std::process::Command::new(&cli.command[0])
             .args(&cli.command[1..])
             .status()
