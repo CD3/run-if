@@ -1,10 +1,10 @@
-# `run-if` - conditionally run command if targets don't exist or dependencies have changed.
+# `run-if` - conditionally execute command if targets don't exist or dependencies have changed.
 
-This is a simple python script that basically does what `checkexec`
-(https://github.com/kurtbuilds/checkexec) does, but it uses a hash of the
-contents of the dependencies to decide if the command should be run (similar to
-[doit](https://pydoit.org/)). It also supports directories as dependencies and
-multiple targets. As with `checkexec`, it pairs well with `just`
+This is a simple but powerful tool for conditionally executing command similar to `checkexec`
+(https://github.com/kurtbuilds/checkexec), but it uses a hash of the
+contents of the dependencies to detect when a dependency has actually changed (similar to
+[doit](https://pydoit.org/)). It also supports directories as dependencies,
+multiple targets, and sentinal files. As with `checkexec`, it pairs well with `just`
 (https://github.com/casey/just). For me, using `run-it` with `just` is simpler
 than `doit` and more powerful than using `checkexec` with `just`.
 
@@ -31,10 +31,12 @@ $ run-if -- src/ == cmake --build build == build/test1 build/test2 build/data/
 
 ## Features
 
-- It is simple, it does one thing and that's it.
-- Supports multiple targets. If a command is expected to produce multiple targets but fails after creating the first, it will be run the next time.
+- Simple. It does one thing and that's it.
+- Supports multiple targets. If any of the targets do not exists, the command will be executed.
+- Supports sentinal files. If any of the sentinals exists, the command will be executed (useful for cleaning tasks).
 - Command runs if dependencies have _changed_, not _updated_. `run-if` compares a hash of each dependency to its hash the last time it ran to determine if a dependency has changed.
 - Supports directories as dependencies. Rather than listing every file in a directory as a dependency, `run-if` allows directories to be dependencies. If any file in the directory has changed, or if any files have been added or removed, the command will be ran.
+- Support for executing command if previous run failed. With the `--run-until-success` option, run-if will execute the command if the last run returned a non-zero exit code.
 
 ## Install
 
