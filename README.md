@@ -17,6 +17,8 @@ to the `openssl` crate fixed the issue.
 The Rust version is now quite a bit faster than the Python version but only because of a few optimizations that
 could have also been implemented in the Python version.
 
+Here's what it looks like.
+
 ```bash
 $ run-if -d main.cpp -t main -- g++ main.cpp -o main
 ```
