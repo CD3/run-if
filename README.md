@@ -5,28 +5,38 @@ This is a simple but powerful tool for conditionally executing command similar t
 contents of the dependencies to detect when a dependency has actually changed (similar to
 [doit](https://pydoit.org/)). It also supports directories as dependencies,
 multiple targets, and sentinal files. As with `checkexec`, it pairs well with `just`
-(https://github.com/casey/just). For me, using `run-it` with `just` is simpler
+(https://github.com/casey/just). For me, using `run-if` with `just` is simpler
 than `doit` and more powerful than using `checkexec` with `just`.
 
+Originally, `run-if` was written in Python but was then rewritten in Rust as way for me to learn Rust. The
+Python version works, although it does tend to run slow on large directory dependencies. When I rewrote it in Rust, I expected
+it to run much faster, but it actually ended up running _slower_. The problem turned out to be the hash function implementation.
+Python's `hashlib` module uses openssl and the hash function I was using in Rust was written in Rust, which was slower. Switching
+to the `openssl` crate fixed the issue.
+
+The Rust version is now quite a bit faster than the Python version but only because of a few optimizations that
+could have also been implemented in the Python version.
+
 ```bash
-$ run-if main.cpp == g++ main.cpp -o main == main
+$ run-if -d main.cpp -t main -- g++ main.cpp -o main
 ```
 
-If `main` does not exist, or if the contents of `main.cpp` have changed since the last time `run-if` was called,
+If `main` does not exist, or if the contents of `main.cpp` have changed since the last time `run-if` was called (with this command),
 `g++ main.cpp -o main` will be run.
 
-The syntax is different than checkexec:
+The Python version accepted a shorthand syntax
+
 ```bash
-$ run-if [DEPENDENCY...] == <COMMAND> == [TARGET...]
+$ run-if -- main.cpp == g++ main.cpp -o main == main
 ```
-Originally I tried using "->" instead of "==" to give a visual of "dependencies go into a command that produces targets", but
-it caused problems with the option parser and the shell (the option parser treated '-' as an option indicator and the shell
-treated '>' as a file redirect).
+
+This syntax is currently _not_ supported by the Rust version. Dependencies and targets (and sentinals) must be given with command line options. All command line
+arguments are taken to be part of the command.
 
 Multiple targets can be listed and both targets and dependencies can be files or directories.
 
 ```bash
-$ run-if -- src/ == cmake --build build == build/test1 build/test2 build/data/
+$ run-if -d src/ -t build/test1 -t build/test2 build/data/ -- cmake --build build 
 ```
 
 ## Features
@@ -36,19 +46,15 @@ $ run-if -- src/ == cmake --build build == build/test1 build/test2 build/data/
 - Supports sentinal files. If any of the sentinals exists, the command will be executed (useful for cleaning tasks).
 - Command runs if dependencies have _changed_, not _updated_. `run-if` compares a hash of each dependency to its hash the last time it ran to determine if a dependency has changed.
 - Supports directories as dependencies. Rather than listing every file in a directory as a dependency, `run-if` allows directories to be dependencies. If any file in the directory has changed, or if any files have been added or removed, the command will be ran.
-- Support for executing command if previous run failed. With the `--run-until-success` option, run-if will execute the command if the last run returned a non-zero exit code.
+- Support for executing command if previous run failed. With the `--run-until-success` option, `run-if` will execute the command if the last run returned a non-zero exit code.
 
 ## Install
 
-Install `run-if` with `pip` using the `run-if-changed` package (`run-if` is too similar to another package already in the repository).
-
-```bash
-$ pip install run-if-changed
-```
+You should be able to do a `cargo install run-if`, but I'm new to Rust and still figuring out how to do this.
 
 ## Concepts
 
-`run-if` is a tool for running commands if  certain conditions are met. Several different types of files/directories are considered when
+`run-if` is a tool for running commands if certain conditions are met. Several different types of files/directories are considered when
 determining if a command should run.
 
 targets
@@ -65,11 +71,16 @@ sentinals
 ### Rules for determining if a command will be run
 
 `run-if` does not use modification times to determine if a command should be run. Instead, it writes a small JSON
-file in the current working directory to cache information between runs that is used to determine if a command should run.
-Every time `run-if` is called, it computes a hash of all dependencies and caches these in the JSON file. However, dependency hashes
-for different commands are stored separately. If `run-if` is called with the same dependency but different commands, both commands may run.
+file in the current working directory to cache information between runs that is used to determine if a command should run
+(it does use modification times as an optimization to determine if the file contents need to be checked).
 
-If a command is ran, the exit status of the command is also cached. This can be used to then decide if the command should be ran in the future (see below).
+The first time `run-if` is called, it computes a hash of all dependencies and caches these in the JSON file.
+The next time it runs, it computes the hash of all dependencies that have been "modifed" (updated mtime) and 
+compares them to the cached hashes to decide if the command should be executed.
+Dependency hashes for different commands are stored separately.
+If `run-if` is called with the same dependency but different commands, both commands may run.
+
+If a command is executed, the exit status of the command is also cached. This can be used to then decide if the command should be executed in the future (see below).
 
 The rules for determining if a command will be ran are as follows:
 
@@ -82,62 +93,36 @@ Note that these rules lead to a few properties:
 
 - Listing a target that does not exist and will not be created by the command will cause a command to always run.
 - Listing no targets will cause all commands with the same dependencies to run one, and then not again until the dependencies change.
-- If a command has no targets or dependencies, it will not be ran.
+- If a command has no targets or dependencies, it will not be executed.
 
 ## Usage
 
-
-### Options
 
 `run-if` supports two methods for specifying dependencies and targets. The original syntax allowed the user to list dependencies, the command, and targets
 all as one long list of arguments:
 
 ```bash
-$ run-if -- dep1.txt dep2.txt == cmake --build . == build/a.out
+$ run-if -d dep1.txt -d dep2.txt -t build/a.out -- cmake --build . 
 ```
 
-Originally we used '->' instead of '=='
-
-```bash
-$ run-if -- dep1.txt dep2.txt -> cmake --build . -> build/a.out
-```
-
-to sort of imply that "dependencies" to into "command" which produced "targets". Since then, we have added support for giving dependencies and targets with command
-line options, which is a more "standard" interface. It also enabled adding other file types, not just dependencies and targets.
-
-`--dependency`
-: Add a dependency
-
-`--target`
-: Add a target
-
-`--sentinal`
-: Add a sentinal
-
-`--run-until-success`
-: Run the command, even if dependencies have not changed and the targets exists, if the last attempt was unsuccessful.
-
-`--force`
-: Run the command, even if the dependencies have not changed and the targets exists. This will still perform all checks
-  and update the cache.
-
-The `--run-until-success` is useful for my development workflow. I run a build-and-test command in a terminal with `just` and `entr` while editing
+The `--try-until-success` will cause the command to be executed if the last run did not succeed (returned non-zero exit code).
+It has been useful for my development workflow. I run a build-and-test command in a terminal with `just` and `entr` while editing
 code in Neovim. If I run into a compile error, I can run the build-and-test command in Neovim using [:AsyncRun](https://github.com/skywind3000/asyncrun.vim)
 and jump to the source location of the compiler error. Without the option, `run-if` would not re-run the build-and-test command after finished in the
 terminal unless a source file changed (not just saved).
 
 ### Examples
 
-Run Conan if the the projects `conanfile.txt` files changes
+Run Conan if the projects `conanfile.txt` files changes
 
 ```bash
-$ run-if --dependencies conanfile.txt -- conan install . --build missing
+$ run-if --dependency conanfile.txt -- conan install . --build missing
 ```
-Note that the `--` is require to allow passing options to the conan command.
+Note that the `--` is required to allow passing options to the `conan` command.
 
 Run CMake if the cache file has not been created or the CMakeLists.txt file has changed
 ```bash
-$ run-if --dependencies CMakeLists.txt --target build/CMakeCache.txt -- bash -c 'cd build && cmake ..'
+$ run-if --dependency CMakeLists.txt --target build/CMakeCache.txt -- bash -c 'cd build && cmake ..'
 ```
 
 Run a `make clean` if the build directory exists
