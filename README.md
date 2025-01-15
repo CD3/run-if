@@ -17,7 +17,7 @@ to the `openssl` crate fixed the issue.
 The Rust version is now quite a bit faster than the Python version but only because of a few optimizations that
 could have also been implemented in the Python version.
 
-Here's what it looks like.
+Here's what it looks like...
 
 ```bash
 $ run-if -d main.cpp -t main -- g++ main.cpp -o main
@@ -52,11 +52,13 @@ $ run-if -d src/ -t build/test1 -t build/test2 build/data/ -- cmake --build buil
 
 ## Install
 
-You should be able to do a `cargo install run-if`, but I'm new to Rust and still figuring out how to do this.
+```bash
+cargo install --git https://github.com/CD3/run-if.git
+```
 
 ## Concepts
 
-`run-if` is a tool for running commands if certain conditions are met. Several different types of files/directories are considered when
+`run-if` is a tool for executing commands if certain conditions are met. Several different types of files/directories are considered when
 determining if a command should run.
 
 targets
