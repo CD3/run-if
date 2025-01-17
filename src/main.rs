@@ -145,20 +145,15 @@ fn main() -> Result<()> {
             );
         } else {
             debug!("  Found '{}' in cache.", dep.display(),);
-            debug!(
-                "  Checking if '{}' has been modified...",
-                dep.display(),
-            );
+            debug!("  Checking if '{}' has been modified...", dep.display(),);
             debug!("  Current mtime: {}", dep_mtime);
-            debug!("  Cached  mtime: {}",cmd_status.dependencies.get(&dep_name).unwrap().mtime);
+            debug!(
+                "  Cached  mtime: {}",
+                cmd_status.dependencies.get(&dep_name).unwrap().mtime
+            );
             // check if file has been "modified" (saved) since last time
             if cmd_status.dependencies.get(&dep_name).unwrap().mtime != dep_mtime {
-                debug!(
-                    "  '{}' has been modified: mtime: {}, cached mtime: {}",
-                    dep.display(),
-                    dep_mtime,
-                    cmd_status.dependencies.get(&dep_name).unwrap().mtime
-                );
+                debug!("  '{}' has been modified.", dep.display(),);
                 cmd_status.dependencies.get_mut(&dep_name).unwrap().mtime = dep_mtime;
                 debug!(
                     "  Checking if contents of '{}' have changed...",
@@ -166,6 +161,11 @@ fn main() -> Result<()> {
                 );
                 // check if file has _actually_ been modified
                 let dep_hash = change_detection::hash_path(dep)?;
+                debug!("  Current hash: {}", dep_hash);
+                debug!(
+                    "  Cached  hash: {}",
+                    cmd_status.dependencies.get(&dep_name).unwrap().content_hash
+                );
                 if cmd_status.dependencies.get(&dep_name).unwrap().content_hash != dep_hash {
                     debug!(
                         "  '{}' contents have changed. Command will be executed.",
@@ -178,13 +178,10 @@ fn main() -> Result<()> {
                         .unwrap()
                         .content_hash = dep_hash;
                 } else {
-                    debug!(
-                        "  '{}' contents have NOT changed.",
-                        dep.display(),
-                    );
+                    debug!("  '{}' contents have NOT changed.", dep.display(),);
                 }
-            }else{
-                debug!("  '{}' has not changed.",dep.display());
+            } else {
+                debug!("  '{}' has not changed.", dep.display());
             }
         }
     }
@@ -199,20 +196,21 @@ fn main() -> Result<()> {
             );
             run_command = true;
             break;
-        }
-        else{
+        } else {
             debug!("  target '{}' exists.", tar.display());
         }
     }
     // check to see if any sentinals exist
     debug!("Checking sentinals...");
     for sen in cli.sentinal.iter() {
-        debug!("  sentinal '{}' exists. Command will be executed.", sen.display());
+        debug!(
+            "  sentinal '{}' exists. Command will be executed.",
+            sen.display()
+        );
         if sen.exists() {
             run_command = true;
             break;
-        }
-        else{
+        } else {
             debug!("  sentinal '{}' does not exist.", sen.display());
         }
     }
@@ -236,7 +234,10 @@ fn main() -> Result<()> {
         let status = std::process::Command::new(&cli.command[0])
             .args(&cli.command[1..])
             .status()
-            .expect(&format!("Error executing the command. Command parts: {:?}", cli.command));
+            .expect(&format!(
+                "Error executing the command. Command parts: {:?}",
+                cli.command
+            ));
         cmd_status.exit_code = status.code();
     }
     // write the cache file even if we didn't run the command
