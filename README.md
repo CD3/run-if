@@ -38,7 +38,7 @@ arguments are taken to be part of the command.
 Multiple targets can be listed and both targets and dependencies can be files or directories.
 
 ```bash
-$ run-if -d src/ -t build/test1 -t build/test2 build/data/ -- cmake --build build 
+$ run-if -d src/ -t build/test1 -t build/test2 build/data/ -- cmake --build build
 ```
 
 ## Features
@@ -74,12 +74,12 @@ sentinals
 
 ### Rules for determining if a command will be run
 
-`run-if` does not use modification times to determine if a command should be run. Instead, it writes a small JSON
+`run-if` does not compare the modification times of dependencies and targets to determine if a command should be run. Instead, it writes a small JSON
 file in the current working directory to cache information between runs that is used to determine if a command should run
 (it does use modification times as an optimization to determine if the file contents need to be checked).
 
 The first time `run-if` is called, it computes a hash of all dependencies and caches these in the JSON file.
-The next time it runs, it computes the hash of all dependencies that have been "modifed" (updated mtime) and 
+The next time it runs, it computes the hash of all dependencies that have been "modifed" (updated mtime) and
 compares them to the cached hashes to decide if the command should be executed.
 Dependency hashes for different commands are stored separately.
 If `run-if` is called with the same dependency but different commands, both commands may run.
@@ -106,7 +106,7 @@ Note that these rules lead to a few properties:
 all as one long list of arguments:
 
 ```bash
-$ run-if -d dep1.txt -d dep2.txt -t build/a.out -- cmake --build . 
+$ run-if -d dep1.txt -d dep2.txt -t build/a.out -- cmake --build .
 ```
 
 The `--try-until-success` will cause the command to be executed if the last run did not succeed (returned non-zero exit code).
