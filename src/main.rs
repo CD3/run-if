@@ -117,6 +117,7 @@ fn main() -> Result<()> {
     let cmd_status = cache.commands.get_mut(&cmd_hash).unwrap();
 
     // check to see if any dependencies have changed
+    debug!("Checking dependencies...");
     for dep in cli.dependency.iter() {
         debug!("Checking if dependency '{}' has changed...", dep.display());
         if !dep.exists() {
@@ -148,6 +149,8 @@ fn main() -> Result<()> {
                 "  Checking if '{}' has been modified...",
                 dep.display(),
             );
+            debug!("  Current mtime: {}", dep_mtime);
+            debug!("  Cached  mtime: {}",cmd_status.dependencies.get(&dep_name).unwrap().mtime);
             // check if file has been "modified" (saved) since last time
             if cmd_status.dependencies.get(&dep_name).unwrap().mtime != dep_mtime {
                 debug!(
@@ -180,32 +183,43 @@ fn main() -> Result<()> {
                         dep.display(),
                     );
                 }
+            }else{
+                debug!("  '{}' has not changed.",dep.display());
             }
         }
     }
 
     // check to see if any targets are missing
+    debug!("Checking targets...");
     for tar in cli.target.iter() {
         if !tar.exists() {
             debug!(
-                "target '{}' does not exist. Command will be executed.",
+                "  target '{}' does not exist. Command will be executed.",
                 tar.display()
             );
             run_command = true;
             break;
         }
+        else{
+            debug!("  target '{}' exists.", tar.display());
+        }
     }
     // check to see if any sentinals exist
+    debug!("Checking sentinals...");
     for sen in cli.sentinal.iter() {
-        debug!("sentinal '{}' exists. Command will be executed.", sen.display());
+        debug!("  sentinal '{}' exists. Command will be executed.", sen.display());
         if sen.exists() {
             run_command = true;
             break;
         }
+        else{
+            debug!("  sentinal '{}' does not exist.", sen.display());
+        }
     }
 
     if cli.force {
-        run_command = true
+        run_command = true;
+        debug!("--force flag was given. Command will be executed.");
     }
 
     if !run_command {
