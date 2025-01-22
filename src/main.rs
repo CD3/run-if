@@ -48,6 +48,9 @@ struct Cli {
     /// Run command if last run did not exist with status 0.
     #[arg(short = 'u', long)]
     try_until_success: bool,
+    /// Don't do mtime check optimization to detect changes in files, just compare contents.
+    #[arg(long)]
+    ignore_mtimes: bool,
 
     command: Vec<String>,
 }
@@ -130,7 +133,10 @@ fn main() -> Result<()> {
                 cmd_status.dependencies.get(&dep_name).unwrap().mtime
             );
             // optimization: for files, check if file has been "modified" (saved) since last time.
-            if dep.is_dir() || cmd_status.dependencies.get(&dep_name).unwrap().mtime != dep_mtime {
+            if dep.is_dir()
+                || cli.ignore_mtimes
+                || cmd_status.dependencies.get(&dep_name).unwrap().mtime != dep_mtime
+            {
                 debug!("  '{}' has been modified.", dep.display(),);
                 cmd_status.dependencies.get_mut(&dep_name).unwrap().mtime = dep_mtime;
                 debug!(
