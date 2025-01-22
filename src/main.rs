@@ -104,7 +104,7 @@ fn main() -> Result<()> {
         }
         let dep_name = dep.to_string_lossy().into_owned();
         let dep_mtime = change_detection::get_mtime(&dep)?;
-        // we don't want to consider mtime.
+
         if !cmd_status.dependencies.contains_key(&dep_name) {
             // is dependency in the cache?
             debug!(
@@ -129,8 +129,8 @@ fn main() -> Result<()> {
                 "  Cached  mtime: {}",
                 cmd_status.dependencies.get(&dep_name).unwrap().mtime
             );
-            // check if file has been "modified" (saved) since last time
-            if cmd_status.dependencies.get(&dep_name).unwrap().mtime != dep_mtime {
+            // optimization: for files, check if file has been "modified" (saved) since last time.
+            if dep.is_dir() || cmd_status.dependencies.get(&dep_name).unwrap().mtime != dep_mtime {
                 debug!("  '{}' has been modified.", dep.display(),);
                 cmd_status.dependencies.get_mut(&dep_name).unwrap().mtime = dep_mtime;
                 debug!(
