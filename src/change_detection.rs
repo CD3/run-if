@@ -2,8 +2,53 @@ use crate::utils;
 use anyhow::{Context, Result};
 use dpc_pariter::IteratorExt as _;
 use itertools::Itertools;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::UNIX_EPOCH;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DependencyStatus {
+    pub content_hash: String,
+    pub mtime: u128,
+}
+
+impl DependencyStatus {
+    // pub fn new() -> DependencyStatus {
+    //     return DependencyStatus {
+    //         content_hash: "".to_string(),
+    //         mtime: 0,
+    //     };
+    // }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CommandStatus {
+    pub exit_code: Option<i32>,
+    pub dependencies: HashMap<String, DependencyStatus>,
+}
+
+impl CommandStatus {
+    pub fn new() -> CommandStatus {
+        return CommandStatus {
+            dependencies: HashMap::new(),
+            exit_code: None,
+        };
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StatusCache {
+    pub commands: HashMap<String, CommandStatus>,
+}
+
+impl StatusCache {
+    pub fn new() -> StatusCache {
+        return StatusCache {
+            commands: HashMap::new(),
+        };
+    }
+}
 
 fn md5(text: &String) -> String {
     let bytes = text.as_bytes().to_vec();
@@ -81,6 +126,9 @@ pub fn hash_path(path: &PathBuf) -> Result<String> {
         path.display()
     ));
 }
+
+// pub fn check_if_path_has_changed(path: &PathBuf} -> Result<String> {
+// }
 
 #[cfg(test)]
 mod tests {

@@ -1,13 +1,12 @@
 use anyhow::{Context, Result};
 use clap::Parser;
 use log::{debug, info, warn};
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::path::PathBuf;
-// use crate::change_detection;
 
 mod change_detection;
 mod utils;
+
+use change_detection::{CommandStatus, DependencyStatus, StatusCache};
 
 #[derive(Parser)]
 #[command(version)]
@@ -53,21 +52,6 @@ struct Cli {
     command: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct DependencyStatus {
-    content_hash: String,
-    mtime: u128,
-}
-#[derive(Debug, Serialize, Deserialize)]
-struct CommandStatus {
-    exit_code: Option<i32>,
-    dependencies: HashMap<String, DependencyStatus>,
-}
-#[derive(Debug, Serialize, Deserialize)]
-struct Cache {
-    commands: HashMap<String, CommandStatus>,
-}
-
 fn main() -> Result<()> {
     env_logger::init();
     let cli = Cli::parse();
@@ -76,9 +60,7 @@ fn main() -> Result<()> {
         std::process::exit(0);
     }
 
-    let mut cache = Cache {
-        commands: HashMap::new(),
-    };
+    let mut cache = StatusCache::new();
     // Check if cache file exists, if so, load it.
     if cli.database.exists() {
         // todo: lock the file
@@ -106,13 +88,9 @@ fn main() -> Result<()> {
 
     if !cache.commands.contains_key(&cmd_hash) {
         run_command = true;
-        cache.commands.insert(
-            cmd_hash.clone(),
-            CommandStatus {
-                dependencies: HashMap::new(),
-                exit_code: None,
-            },
-        );
+        cache
+            .commands
+            .insert(cmd_hash.clone(), CommandStatus::new());
     }
     let cmd_status = cache.commands.get_mut(&cmd_hash).unwrap();
 
