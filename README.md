@@ -17,6 +17,9 @@ to the `openssl` crate fixed the issue.
 The Rust version is now quite a bit faster than the Python version but only because of a few optimizations that
 could have also been implemented in the Python version.
 
+**Update** I had a student recommend using Blake3 for the hash function which is faster than md5. The
+Rust version is now much faster than the Python version and does not depend on OpenSSL.
+
 Here's what it looks like...
 
 ```bash
