@@ -63,6 +63,39 @@ fn main() -> Result<()> {
         std::process::exit(0);
     }
 
+    // check if any dependencies and targets are given as aruments.
+    let mut dependencies: Vec<PathBuf> = cli.dependency;
+    let mut command: Vec<String> = Vec::new();
+    let mut targets: Vec<PathBuf> = cli.target;
+    let delim = "==";
+    if cli.command.iter().any(|e| e == delim) {
+        let mut c = 0;
+        for item in cli.command.iter() {
+            if item == "==" {
+                c += 1;
+                continue;
+            }
+            if c == 0 {
+                dependencies.push(item.into());
+            }
+            if c == 1 {
+                command.push(item.into());
+            }
+            if c == 2 {
+                targets.push(item.into());
+            }
+            if c > 2 {
+                eprintln!("Error: too many argument groups. A maximum of 3 groups are allowed which means a maximum of 2 '{}' delimiters are allowed.", delim);
+                std::process::exit(1);
+            }
+        }
+    } else {
+        command = cli.command;
+    }
+    if command.len() == 0 {
+        eprintln!("Error: detected argument groups, but command group is empty. There must be at least one argument after the first '{}' delimiter.",delim);
+        std::process::exit(1);
+    }
     let mut cache = StatusCache::new();
     // Check if cache file exists, if so, load it.
     if cli.database.exists() {
@@ -83,7 +116,7 @@ fn main() -> Result<()> {
         }
     }
 
-    let cmd_hash = change_detection::hash_string(&cli.command.join(" "));
+    let cmd_hash = change_detection::hash_string(&command.join(" "));
     // We assume that the command should not be run
     // because it is _obviously_ expensive
     // (if it wasn't you would not need us).
@@ -99,7 +132,7 @@ fn main() -> Result<()> {
 
     // check to see if any dependencies have changed
     debug!("Checking dependencies...");
-    for dep in cli.dependency.iter() {
+    for dep in dependencies.iter() {
         debug!("Checking if dependency '{}' has changed...", dep.display());
         if !dep.exists() {
             eprintln!("Error: dependency '{}' does not exist.", dep.display());
@@ -172,7 +205,7 @@ fn main() -> Result<()> {
 
     // check to see if any targets are missing
     debug!("Checking targets...");
-    for tar in cli.target.iter() {
+    for tar in targets.iter() {
         if !tar.exists() {
             debug!(
                 "  target '{}' does not exist. Command will be executed.",
@@ -214,13 +247,13 @@ fn main() -> Result<()> {
     }
 
     if run_command {
-        debug!("Executing command `{}`.", &cli.command[0]);
-        let status = std::process::Command::new(&cli.command[0])
-            .args(&cli.command[1..])
+        debug!("Executing command `{}`.", &command[0]);
+        let status = std::process::Command::new(&command[0])
+            .args(&command[1..])
             .status()
             .expect(&format!(
                 "Error executing the command. Command parts: {:?}",
-                cli.command
+                command
             ));
         cmd_status.exit_code = status.code();
     }

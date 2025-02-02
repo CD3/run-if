@@ -5,19 +5,19 @@
   $ touch dep/f2.txt
   $ touch dep/dir/f1.txt
   $ touch dep/dir/f2.txt
-  $ run-if -d dep echo HI
+  $ $TESTDIR/../../target/debug/run-if -d dep echo HI
   HI
-  $ run-if -d dep echo HI
+  $ $TESTDIR/../../target/debug/run-if -d dep echo HI
   $ echo a > dep/f1.txt
-  $ run-if -d dep echo HI
+  $ $TESTDIR/../../target/debug/run-if -d dep echo HI
   HI
   $ echo a > dep/f1.txt
-  $ run-if -d dep echo HI
+  $ $TESTDIR/../../target/debug/run-if -d dep echo HI
   $ echo a > dep/dir/f1.txt
-  $ run-if -d dep echo HI
+  $ $TESTDIR/../../target/debug/run-if -d dep echo HI
   HI
   $ echo a > dep/dir/f1.txt
-  $ run-if -d dep echo HI
+  $ $TESTDIR/../../target/debug/run-if -d dep echo HI
   $ echo b > dep/dir/f1.txt
-  $ run-if -d dep echo HI
+  $ $TESTDIR/../../target/debug/run-if -d dep echo HI
   HI
