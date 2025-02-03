@@ -28,21 +28,21 @@ $ run-if -d main.cpp -t main -- g++ main.cpp -o main
 
 If `main` does not exist, or if the contents of `main.cpp` have changed since the last time `run-if` was called (with this command),
 `g++ main.cpp -o main` will be run.
-
-The Python version accepted a shorthand syntax
-
-```bash
-$ run-if -- main.cpp == g++ main.cpp -o main == main
-```
-
-This syntax is currently _not_ supported by the Rust version. Dependencies and targets (and sentinals) must be given with command line options. All command line
-arguments are taken to be part of the command.
-
 Multiple targets can be listed and both targets and dependencies can be files or directories.
 
 ```bash
 $ run-if -d src/ -t build/test1 -t build/test2 build/data/ -- cmake --build build
 ```
+
+You can also give dependencies, the command, and targets in _argument groups_. Argument groups are arguments separated by a group delimiter '=='.
+For example:
+
+```bash
+$ run-if -- main.cpp == g++ main.cpp -o main == main
+```
+
+Here, `main.cp` is a dependency for the command `g++ main.cpp -o main` and `main` is a target. This syntax is useful for giving dependencies using shell globs.
+Note that the `--` here is necessary to allow options in the command to be executed (`-o` here).
 
 ## Features
 
