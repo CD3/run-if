@@ -1,6 +1,6 @@
 # `run-if` - conditionally execute command if targets don't exist or dependencies have changed.
 
-This is a simple but powerful tool for conditionally executing command similar to `checkexec`
+This is a simple but powerful tool for conditionally executing commands similar to `checkexec`
 (https://github.com/kurtbuilds/checkexec), but it uses a hash of the
 contents of the dependencies to detect when a dependency has actually changed (similar to
 [doit](https://pydoit.org/)). It also supports directories as dependencies,
@@ -8,8 +8,8 @@ multiple targets, and sentinal files. As with `checkexec`, it pairs well with `j
 (https://github.com/casey/just). For me, using `run-if` with `just` is simpler
 than `doit` and more powerful than using `checkexec` with `just`.
 
-Originally, `run-if` was written in Python but was then rewritten in Rust as way for me to learn Rust. The
-Python version works, although it does tend to run slow on large directory dependencies. When I rewrote it in Rust, I expected
+Originally, `run-if` was written in Python but was then rewritten in Rust as a way for me to learn Rust. The
+Python version sill works, although it does tend to run slow on large directory dependencies. When I rewrote it in Rust, I expected
 it to run much faster, but it actually ended up running _slower_. The problem turned out to be the hash function implementation.
 Python's `hashlib` module uses openssl and the hash function I was using in Rust was written in Rust, which was slower. Switching
 to the `openssl` crate fixed the issue.
