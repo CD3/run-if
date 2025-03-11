@@ -124,7 +124,7 @@ $ run-if -d dep1.txt -d dep2.txt -t build/a.out -- cmake --build .
 Another useful (and unique) option is `--trye-until-success`:
 
 ```bash
-$ run-if --try-until-sucess -d dep1.txt -d dep2.txt -t build/a.out -- cmake --build .
+$ run-if --try-until-success -d dep1.txt -d dep2.txt -t build/a.out -- cmake --build .
 ```
 
 The `--try-until-success` will cause the command to be executed if the last run did not succeed (returned non-zero exit code).
