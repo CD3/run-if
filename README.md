@@ -105,11 +105,26 @@ Note that these rules lead to a few properties:
 ## Usage
 
 
-`run-if` supports two methods for specifying dependencies and targets. The original syntax allowed the user to list dependencies, the command, and targets
-all as one long list of arguments:
+`run-if` supports two methods for specifying dependencies and targets. The first version (written in python) used "argument groups" to identify dependencies, the command, and targets:
+
+
+```bash
+$ run-if -- dep1.txt -d dep2.txt == cmake --build . == build/a.out 
+```
+
+Argument groups are separated by `==`. The first set of arguments are dependencies, the second set are the command, and the thrid set are teh targets. The idea was that
+dependencies feed into the command which creates the targets. Originally I used `->` instead of `==`, but it caused problems with argument parsing and shell redirection.
+
+`run-if` also supports dependencies and targets given as options:
 
 ```bash
 $ run-if -d dep1.txt -d dep2.txt -t build/a.out -- cmake --build .
+```
+
+Another useful (and unique) option is `--trye-until-success`:
+
+```bash
+$ run-if --try-until-sucess -d dep1.txt -d dep2.txt -t build/a.out -- cmake --build .
 ```
 
 The `--try-until-success` will cause the command to be executed if the last run did not succeed (returned non-zero exit code).
