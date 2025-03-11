@@ -12,7 +12,7 @@ use change_detection::{CommandStatus, DependencyStatus, StatusCache};
 #[command(version)]
 /// Conditionally run a command, similar to make and checkexec.
 ///
-/// run-if runs a given command based on the status of dependencies, targets, and sentinals.
+/// run-if runs a given command based on the status of dependencies, targets, and sentinels.
 ///
 /// A _dependency_ must be a file or directory. The run-if will run the command if any dependency
 /// has changed since the last time it was ran. Changes are not based on modification time, they
@@ -25,7 +25,7 @@ use change_detection::{CommandStatus, DependencyStatus, StatusCache};
 /// created by the command) will cause the command to run every time (unless some other process
 /// creates a file with the same name).
 ///
-/// A _sentinal_ is a file or directory that will be checked to exists.
+/// A _sentinel_ is a file or directory that will be checked to exists.
 /// If a sential **does** exist, the command will be ran even if the dependencies have not changed.
 /// This can be used to cause a command to run only if some file that woudl be produced by another
 /// processes is present. Can be useful for running command that do some cleanup.
@@ -36,9 +36,9 @@ struct Cli {
     /// Specify a target. Can be given multiple times.
     #[arg(short, long)]
     target: Vec<PathBuf>,
-    /// Specify a sentinal. Can be given multiple times.
+    /// Specify a sentinel. Can be given multiple times.
     #[arg(short, long)]
-    sentinal: Vec<PathBuf>,
+    sentinel: Vec<PathBuf>,
     /// Specify the database file to use.
     #[arg(long, default_value = ".run-if.json")]
     database: PathBuf,
@@ -217,18 +217,18 @@ fn main() -> Result<()> {
             debug!("  target '{}' exists.", tar.display());
         }
     }
-    // check to see if any sentinals exist
-    debug!("Checking sentinals...");
-    for sen in cli.sentinal.iter() {
+    // check to see if any sentinels exist
+    debug!("Checking sentinels...");
+    for sen in cli.sentinel.iter() {
         debug!(
-            "  sentinal '{}' exists. Command will be executed.",
+            "  sentinel '{}' exists. Command will be executed.",
             sen.display()
         );
         if sen.exists() {
             run_command = true;
             break;
         } else {
-            debug!("  sentinal '{}' does not exist.", sen.display());
+            debug!("  sentinel '{}' does not exist.", sen.display());
         }
     }
 

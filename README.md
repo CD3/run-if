@@ -4,7 +4,7 @@ This is a simple but powerful tool for conditionally executing commands similar 
 (https://github.com/kurtbuilds/checkexec), but it uses a hash of the
 contents of the dependencies to detect when a dependency has actually changed (similar to
 [doit](https://pydoit.org/)). It also supports directories as dependencies,
-multiple targets, and sentinal files. As with `checkexec`, it pairs well with `just`
+multiple targets, and sentinel files. As with `checkexec`, it pairs well with `just`
 (https://github.com/casey/just). For me, using `run-if` with `just` is simpler
 than `doit` and more powerful than using `checkexec` with `just`.
 
@@ -48,7 +48,7 @@ Note that the `--` here is necessary to allow options in the command to be execu
 
 - Simple. It does one thing and that's it.
 - Supports multiple targets. If any of the targets do not exists, the command will be executed.
-- Supports sentinal files. If any of the sentinals exists, the command will be executed (useful for cleaning tasks).
+- Supports sentinel files. If any of the sentinels exists, the command will be executed (useful for cleaning tasks).
 - Command runs if dependencies have _changed_, not _updated_. `run-if` compares a hash of each dependency to its hash the last time it ran to determine if a dependency has changed.
 - Supports directories as dependencies. Rather than listing every file in a directory as a dependency, `run-if` allows directories to be dependencies. If any file in the directory has changed, or if any files have been added or removed, the command will be ran.
 - Support for executing command if previous run failed. With the `--run-until-success` option, `run-if` will execute the command if the last run returned a non-zero exit code.
@@ -70,7 +70,7 @@ targets
 dependencies
 : Files or directories that will cause the command to run if they _change_.
 
-sentinals
+sentinels
 : Files or directories that will cause the command to run if they _**do** exist_.
 
 
@@ -92,8 +92,10 @@ If a command is executed, the exit status of the command is also cached. This ca
 The rules for determining if a command will be ran are as follows:
 
 - By default, assume the command should _not_ be run.
+- If there is no cache entry for the given command, run the command.
 - If _any_ targets are missing, run the command.
-- If the hash of dependencies differ from the previous run (of the same command), run the command.
+- If _any_ sentinels exist, run the command.
+- If the hash of _any_ dependencies differ from the previous run (of the same command), run the command.
 - If the `--run-until-success` option has been given and the command returned a non-zero exit status on the previous run, run the command.
 
 Note that these rules lead to a few properties:
@@ -149,5 +151,5 @@ $ run-if --dependency CMakeLists.txt --target build/CMakeCache.txt -- bash -c 'c
 
 Run a `make clean` if the build directory exists
 ```bash
-$ run-if --sentinal build -- make clean
+$ run-if --sentinel build -- make clean
 ```
