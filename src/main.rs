@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use log::{debug, info, warn};
 use std::path::PathBuf;
+use std::process::ExitCode;
 
 mod change_detection;
 mod utils;
@@ -55,7 +56,7 @@ struct Cli {
     command: Vec<String>,
 }
 
-fn main() -> Result<()> {
+fn main() -> Result<ExitCode> {
     env_logger::init();
     let cli = Cli::parse();
     if cli.command.len() == 0 {
@@ -246,6 +247,7 @@ fn main() -> Result<()> {
         }
     }
 
+    let mut exit_code: Option<i32> = Some(0);
     if run_command {
         debug!("Executing command `{}`.", &command[0]);
         let status = std::process::Command::new(&command[0])
@@ -255,6 +257,7 @@ fn main() -> Result<()> {
                 "Error executing the command. Command parts: {:?}",
                 command
             ));
+        exit_code = status.code();
         cmd_status.exit_code = status.code();
     }
     // write the cache file even if we didn't run the command
@@ -269,5 +272,16 @@ fn main() -> Result<()> {
     })?;
     serde_json::to_writer(fout, &cache)?;
 
-    return Ok(());
+    // if &cmd_status.exit_code.unwrap() != 0 {
+    //     return Ok(ExitCode::from(1));
+    // }
+    match exit_code {
+        Some(code) => {
+            if code == 0 {
+                return Ok(ExitCode::SUCCESS);
+            }
+            return Ok(ExitCode::FAILURE);
+        }
+        None => return Ok(ExitCode::FAILURE),
+    }
 }
