@@ -280,8 +280,12 @@ fn main() -> Result<ExitCode> {
             if code == 0 {
                 return Ok(ExitCode::SUCCESS);
             }
+            println!("Command returned non-zero exit status {}", code);
             return Ok(ExitCode::FAILURE);
         }
-        None => return Ok(ExitCode::FAILURE),
+        None => {
+            println!("Command did not complete successly");
+            return Ok(ExitCode::FAILURE);
+        }
     }
 }
