@@ -1,0 +1,69 @@
+#! /bin/bash
+
+TOOL_MISSING=0
+for TOOL in "uv" "just"
+do
+  if ! command -v ${TOOL} > /dev/null
+  then
+    echo "'${TOOL}' missing. Try running 'make bootstrap'"
+    TOOL_MISSING+=1
+  fi
+done
+
+if test $TOOL_MISSING -gt 0
+then
+cat << 'EOF'
+**Some tools are missing**
+
+This project is using a set of build tools that are not typically installed by default.
+One or more of these tools is missing and needs to be installed. There is a `booststrap`
+script that can install these tools for you, or you can install them yourself.
+
+The tools:
+  - just
+  - uv
+
+**Why are we using these tools?**
+
+== `just`
+
+To run common task (i.e. build, test, etc) with short names.
+
+`just` (https://github.com/casey/just) is a command runner. It is similar to
+make, but has many features and improvements over make (see the list on
+GitHub). For me, thej nice features are:
+
+- Targets (just calles them recipes) can be implemented as scripts (written in
+any language). If the first line of a target is a shebang (#!), then `just`
+will do some magic to execute it. - You can run `just` from sub-directories and
+it will pick up the project justfile. - Recipes can take arguments. So you can
+do `just build Release` instead of `make build TYPE=Release`.
+
+
+== `uv`
+
+Manage our Python tools.
+
+We depend on some Python tools For example, we use Conan
+(https://docs.conan.io/2/) to install our C++ dependencies. We also use Cram
+(https://bitheap.org/cram/) for some CLI tests. `uv`
+(https://github.com/astral-sh/uv) is a Python package manager that can _also_
+manage Python installations, which means you can use `uv` to install Python.
+It's like a combination of `pip` and `pyenv`, but it is _much_ faster.
+
+The bootsrap script (`./scripts/bootstrap`) does its best to install the
+necessary build tools in an unobtrusive way. `uv` will be installed to
+`~/.local/bin`, everthing else will be installed to a virtual environment in
+the project directory (Conan will create a cache directory in `~/.conan2`). If
+a tools that is needed is already installed, it will not be installed by the
+boostrap script.
+
+A Makefile is provided to run the bootstrap script so that people new to the
+project will see a Makefile and think "Oh, I should run `make`".
+
+
+EOF
+
+  exit $TOOL_MISSING
+fi
+

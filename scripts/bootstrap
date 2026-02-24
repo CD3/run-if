@@ -1,0 +1,69 @@
+#! /bin/bash
+
+
+UV=$(which uv)
+JUST=$(which just)
+CURL=$(which curl)
+WGET=$(which wget)
+
+
+echo "Bootstrapping build tools."
+echo "Tools that were detected:"
+echo "     uv: '${UV}'"
+echo "   just: '${JUST}'"
+
+UV=${UV:=${HOME}/.local/bin/uv}
+JUST=${JUST:=${PWD}/.rustenv/rust/bin/just}
+
+echo "Tools that will be used:"
+echo "     uv: '${UV}'"
+echo "   just: '${JUST}'"
+echo
+
+
+if test ! -e "${UV}"; then 
+	   echo "Need to install 'uv'"
+		 if test -z "${CURL}" -a  -z "${WGET}"; then 
+       echo "Need to install 'curl'"
+       if which apt > /dev/null; then
+         echo "Installing curl with 'apt'"
+         sudo apt install curl
+       fi
+       CURL=$(which curl)
+     fi
+		 if test -n "${CURL}"; then
+        "${CURL}" -LsSf https://astral.sh/uv/install.sh | sh
+     fi
+     if test -n "${WGET}"; then 
+        "${WGET}" -qO- https://astral.sh/uv/install.sh | sh
+		 fi;
+ fi
+		
+if test ! -d .venv; then
+  echo "Creating a Python virtualenv with 'uv'"
+  "${UV}" venv
+fi
+
+echo "Installing missing Python tools into virtual environment"
+test -z "$(which cram)" -a ! -e .venv/bin/cram && "${UV}" pip install cram && echo "Installed 'cram'"
+test -z "$(which rustenv)" -a ! -e .venv/bin/rustenv && "${UV}" pip install rustenv && echo "Installed 'rustenv'"
+
+if test ! -d .rustenv; then
+  echo "Creating a Rust virtualenv with 'rustenv'"
+  "${UV}" run rustenv .rustenv
+fi
+
+echo "Installing missing Rust tools into virtual environment"
+test -f "${JUST}" || (.rustenv/bin/cargo install just && echo "Installed 'just'")
+
+
+echo
+echo
+if ! which just > /dev/null; then
+ test -L just || ln -s "${JUST}" just
+ echo "The 'just' command is not in your path so it was installed in the rust virtual environment."
+ echo "You can invoke it by:"
+ echo "  1. Adding .rustenv/rust/bin to your PATH variable and running 'just'"
+ echo "  2. Sourcing .rustenv/bin/active and running 'just'"
+ echo "  3. Using the symlink created in the project root."
+fi
