@@ -46,7 +46,7 @@ struct Cli {
     /// Run command no matter what. Result of running command will be saved to database.
     #[arg(short, long)]
     force: bool,
-    /// Run command if last run did not exist with status 0.
+    /// Run command if last run did not exit with status 0.
     #[arg(short = 'u', long)]
     try_until_success: bool,
     /// Don't do mtime check optimization to detect changes in files, just compare contents.
