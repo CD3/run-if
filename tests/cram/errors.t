@@ -12,3 +12,9 @@
   $ $TESTDIR/../../target/debug/run-if -d deps echo HI
   HI
   $ $TESTDIR/../../target/debug/run-if -d deps echo HI
+  $ $TESTDIR/../../target/debug/run-if -d deps ech HI
+  
+  thread 'main' * panicked * (glob)
+  Error * Command parts: ["ech", "HI"]* (glob)
+  note: run * (glob)
+  [101]
