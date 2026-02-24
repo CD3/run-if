@@ -284,7 +284,7 @@ fn main() -> Result<ExitCode> {
             return Ok(ExitCode::FAILURE);
         }
         None => {
-            println!("Command did not complete successly");
+            println!("Command did not complete successfully");
             return Ok(ExitCode::FAILURE);
         }
     }
