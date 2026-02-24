@@ -139,7 +139,7 @@ pub fn hash_path(path: &PathBuf) -> Result<String> {
     ));
 }
 
-// get modification time of file from UNIX epoc in microseconds.
+// get modification time of file from UNIX epoch in microseconds.
 pub fn get_mtime(path: &PathBuf) -> Result<u128> {
     Ok(std::fs::metadata(path)
         .with_context(|| format!("Could not get metadata of file '{}'", path.display()))?

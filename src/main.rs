@@ -19,19 +19,19 @@ use change_detection::{CommandStatus, DependencyStatus, StatusCache};
 /// has changed since the last time it was ran. Changes are not based on modification time, they
 /// are based on a hash of the contents.
 ///
-/// A _target_ is a file or directory that will be checked to exisit.
+/// A _target_ is a file or directory that will be checked to exist.
 /// If a target **does not** exist, the command will be ran even if the dependencies have not changed.
 /// Typically this would be a file or directory that the command will create, but it does not have
 /// to be. Specifying a dummy name for a target (i.e. a name that is not a file or directory
 /// created by the command) will cause the command to run every time (unless some other process
 /// creates a file with the same name).
 ///
-/// A _sentinel_ is a file or directory that will be checked to exists.
-/// If a sential **does** exist, the command will be ran even if the dependencies have not changed.
-/// This can be used to cause a command to run only if some file that woudl be produced by another
-/// processes is present. Can be useful for running command that do some cleanup.
+/// A _sentinel_ is a file or directory that will be checked to exist.
+/// If a sentinel **does** exist, the command will be ran even if the dependencies have not changed.
+/// This can be used to cause a command to run only if some file that would be produced by another
+/// process is present. Can be useful for running commands that do some cleanup.
 struct Cli {
-    /// Specify a dependency. Must be a file or directly. Can be given multiple times.
+    /// Specify a dependency. Must be a file or directory. Can be given multiple times.
     #[arg(short, long)]
     dependency: Vec<PathBuf>,
     /// Specify a target. Can be given multiple times.
@@ -64,7 +64,7 @@ fn main() -> Result<ExitCode> {
         std::process::exit(0);
     }
 
-    // check if any dependencies and targets are given as aruments.
+    // check if any dependencies and targets are given as arguments.
     let mut dependencies: Vec<PathBuf> = cli.dependency;
     let mut command: Vec<String> = Vec::new();
     let mut targets: Vec<PathBuf> = cli.target;
