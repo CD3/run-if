@@ -117,14 +117,25 @@ fn main() -> Result<ExitCode> {
         }
     }
 
+    // compute a hash for the command to use as a key in the cache.
     let cmd_hash = change_detection::hash_string(&command.join(" "));
     // We assume that the command should not be run
     // because it is _obviously_ expensive
     // (if it wasn't you would not need us).
     let mut run_command = false;
 
+    // check for command in the cache and create
+    // an empty entry if it does not exist.
     if !cache.commands.contains_key(&cmd_hash) {
-        run_command = true;
+        // don't run the command just because it has not been ran before.
+        // we want to be able to do something like
+        // 
+        // run-if -t .venv uv venv
+        // 
+        // to run `uv env` only if .venv does not exist, even if it has not been run with run-if
+        // before.
+        // maybe we need an option for this? i.e. --run-once to run if the command has not run yet?
+        // run_command = true;
         cache
             .commands
             .insert(cmd_hash.clone(), CommandStatus::new());
