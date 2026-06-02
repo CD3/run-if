@@ -9,7 +9,7 @@ multiple targets, and sentinel files. As with `checkexec`, it pairs well with `j
 than `doit` and more powerful than using `checkexec` with `just`.
 
 Originally, `run-if` was written in Python but was then rewritten in Rust as a way for me to learn Rust. The
-Python version sill works, although it does tend to run slow on large directory dependencies. When I rewrote it in Rust, I expected
+Python version still works, although it does tend to run slow on large directory dependencies. When I rewrote it in Rust, I expected
 it to run much faster, but it actually ended up running _slower_. The problem turned out to be the hash function implementation.
 Python's `hashlib` module uses openssl and the hash function I was using in Rust was written in Rust, which was slower. Switching
 to the `openssl` crate fixed the issue.
@@ -41,16 +41,16 @@ For example:
 $ run-if -- main.cpp == g++ main.cpp -o main == main
 ```
 
-Here, `main.cp` is a dependency for the command `g++ main.cpp -o main` and `main` is a target. This syntax is useful for giving dependencies using shell globs.
+Here, `main.cpp` is a dependency for the command `g++ main.cpp -o main` and `main` is a target. This syntax is useful for giving dependencies using shell globs.
 Note that the `--` here is necessary to allow options in the command to be executed (`-o` here).
 
 ## Features
 
 - Simple. It does one thing and that's it.
-- Supports multiple targets. If any of the targets do not exists, the command will be executed.
-- Supports sentinel files. If any of the sentinels exists, the command will be executed (useful for cleaning tasks).
+- Supports multiple targets. If any of the targets do not exist, the command will be executed.
+- Supports sentinel files. If any of the sentinels exist, the command will be executed (useful for cleaning tasks).
 - Command runs if dependencies have _changed_, not _updated_. `run-if` compares a hash of each dependency to its hash the last time it ran to determine if a dependency has changed.
-- Supports directories as dependencies. Rather than listing every file in a directory as a dependency, `run-if` allows directories to be dependencies. If any file in the directory has changed, or if any files have been added or removed, the command will be ran.
+- Supports directories as dependencies. Rather than listing every file in a directory as a dependency, `run-if` allows directories to be dependencies. If any file in the directory has changed, or if any files have been added or removed, the command will be run.
 - Support for executing command if previous run failed. With the `--run-until-success` option, `run-if` will execute the command if the last run returned a non-zero exit code.
 
 ## Install
@@ -101,7 +101,7 @@ The rules for determining if a command will be ran are as follows:
 Note that these rules lead to a few properties:
 
 - Listing a target that does not exist and will not be created by the command will cause a command to always run.
-- Listing no targets will cause all commands with the same dependencies to run one, and then not again until the dependencies change.
+- Listing no targets will cause all commands with the same dependencies to run once, and then not again until the dependencies change.
 - If a command has no targets or dependencies, it will not be executed.
 
 ## Usage
@@ -114,7 +114,7 @@ Note that these rules lead to a few properties:
 $ run-if -- dep1.txt -d dep2.txt == cmake --build . == build/a.out 
 ```
 
-Argument groups are separated by `==`. The first set of arguments are dependencies, the second set are the command, and the thrid set are teh targets. The idea was that
+Argument groups are separated by `==`. The first set of arguments are dependencies, the second set are the command, and the third set are the targets. The idea was that
 dependencies feed into the command which creates the targets. Originally I used `->` instead of `==`, but it caused problems with argument parsing and shell redirection.
 
 `run-if` also supports dependencies and targets given as options:
@@ -123,7 +123,7 @@ dependencies feed into the command which creates the targets. Originally I used 
 $ run-if -d dep1.txt -d dep2.txt -t build/a.out -- cmake --build .
 ```
 
-Another useful (and unique) option is `--trye-until-success`:
+Another useful (and unique) option is `--try-until-success`:
 
 ```bash
 $ run-if --try-until-success -d dep1.txt -d dep2.txt -t build/a.out -- cmake --build .
@@ -137,7 +137,7 @@ terminal unless a source file changed (not just saved).
 
 ### Examples
 
-Run Conan if the projects `conanfile.txt` files changes
+Run Conan if the project's `conanfile.txt` file changes
 
 ```bash
 $ run-if --dependency conanfile.txt -- conan install . --build missing
